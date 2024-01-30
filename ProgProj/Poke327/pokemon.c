@@ -3,35 +3,67 @@
 #include <time.h>
 
 char screen[21][80];
+char MOUNTAIN = '%';
+char LONGGRASS = ':';
+char CLEARING = '.';
+
+void expandSeed(int x, int y, char seed){
+    if(screen[x+1][y] == '-'){
+        screen[x+1][y] = seed;
+    }
+    if(screen[x-1][y] == '-'){
+        screen[x-1][y] = seed;
+    }
+    if(screen[x][y+1] == '-'){
+        screen[x][y+1] = seed;
+    }
+    if(screen[x][y-1] == '-'){
+        screen[x][y-1] = seed;
+    }
+}
 
 void seeder(char screen[21][80]){
-    int longGrass;
-    int mountains;
-    int clearings;
-
+    
     //create borders
     for(int l = 0; l < 80; l++){
-        screen[0][l] = '%';
-        screen[20][l] = '%';
+        screen[0][l] = MOUNTAIN;
+        screen[20][l] = MOUNTAIN;
     }
     for(int k = 0; k < 21; k++){
-        screen[k][0] = '%';
-        screen[k][79] = '%';
+        screen[k][0] = MOUNTAIN;
+        screen[k][79] = MOUNTAIN;
+    }
+    //create empty spaces using "-"
+    for(int n = 1; n < 20; n++){
+        for(int m = 1; m < 79; m++){
+        screen[n][m] = '-';
+        }
     }
     //seed mountains, long grass and clearings
-    int i = 0;
-    while(i < 3){
-        int y = rand() % 79;
-        int x = rand() % 20;
+    
+    int longGrassY = (rand() % 78) + 1;
+    int longGrassX = (rand() % 19) + 1;
 
-        if(i == 0) // longGrass
-            screen[x][y] = ':';
-        if(i == 1) //mountains
-            screen[x][y] = '%';
-        if(i == 2) //clearings
-            screen[x][y] = '.';
-        i++;
-    }
+    int mountainY = (rand() % 78) + 1;
+    int mountainX = (rand() % 19) + 1;
+
+    int clearingsY = (rand() % 78) + 1;
+    int clearingsX = (rand() % 19) + 1;
+
+    screen[longGrassX][longGrassY] = LONGGRASS;
+    screen[mountainX][mountainY] = MOUNTAIN;
+    screen[clearingsX][clearingsY] = CLEARING;
+
+    //Initial expansion of seed
+    expandSeed(mountainX, mountainY, MOUNTAIN);
+    expandSeed(longGrassX, longGrassY, LONGGRASS);
+    expandSeed(clearingsX, clearingsY, CLEARING);
+
+    // int j = 0;
+    // for(int e = 1; e < 25; e++){
+        
+
+    // }
 }
 
 
