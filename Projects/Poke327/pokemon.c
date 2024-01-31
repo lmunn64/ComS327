@@ -11,7 +11,96 @@ const char CLEARING = '.';
 const char FOREST = '^';
 const char WATER = '~';
 const char EXIT = '#';
+const char CENTER = 'C';
+const char MART = 'M';
 
+void placeMartandCenter(int i, int a){
+    screen[i][a-1] = MART;
+    screen[i][a-2] = MART;
+    screen[i-1][a-1] = MART;
+    screen[i-1][a-2] = MART;
+    screen[i][a+1] = CENTER;
+    screen[i][a+2] = CENTER;
+    screen[i-1][a+1] = CENTER;
+    screen[i-1][a+2] = CENTER;
+}
+
+void martCenterHelper(){
+    int mandc = rand() % 17 + 2; //pokecenter and mart between 2 and 18
+    for(int i = 0; i < 79; i++){
+        if (screen[mandc][i] == EXIT){
+            //checks surrounding area to make sure there are no paths interfering with possible mart and center placement.
+            if (screen[mandc][i+1] != EXIT && screen[mandc][i+2] != EXIT && screen[mandc-1][i+1] != EXIT && screen[mandc-1][i+2] != EXIT && screen[mandc-1][i-1] != EXIT && screen[mandc-1][i-2] != EXIT){
+                placeMartandCenter(mandc, i);
+                return;
+            } 
+            else {
+                martCenterHelper();
+                return;
+            }  
+        }
+    }
+}
+
+//TODO: implement bfs or dijkstras for this instead of dummy path finding
+//Ugly and gross
+//Adds pokecenters and marts as well
+void roadPath(int a, int b, int c, int d){
+    //Pokecenter and mart location
+    int mandc = rand() % 16 + 3;
+    if (mandc == 12){
+        mandc = mandc + 1;
+    }
+    //source is exitN targer is exitS
+    int i;
+    
+    //move down
+    for(i = 1; i < 12; i++){
+        screen[i][a] = EXIT;
+    }
+
+    //check which exit is lower and move horizontally left or right
+    if(a < b){
+        for(int k = a; k <= b; k++){
+            screen[i][k]= EXIT;
+        }
+    }
+    else if(a > b){
+        for(int k = a; k >= b; k--){
+            screen[i][k]= EXIT;    
+        }
+    }
+
+    // move down until exit
+    for(int j = i+1; j < 20; j++){
+        screen[j][b]= EXIT; 
+    }
+        
+    //source is exitW target is exitE
+    int h;
+
+    // move right
+    for(h = 1; h < 40; h++){
+        screen[c][h] = EXIT;
+    }
+    
+    //check which exit is lower and move vertically up or down
+    if(c < d){
+        for(int k = c; k <= d; k++){
+            screen[k][h]= EXIT;
+        }
+    }
+    else if (c > d){
+        for(int k = c; k >= d; k--){
+            screen[k][h]= EXIT;    
+        }
+    }
+
+    // move right until exit
+    for(int j = h; j < 80; j++){
+        screen[d][j]= EXIT;    
+        }
+   }
 void seeder(char screen[21][80]){
     //queue's size
     const int SIZE = 1580; 
@@ -21,10 +110,10 @@ void seeder(char screen[21][80]){
     int queue[1580];
     initQueue(&head,&tail);
 
-    int exitS = rand() % 78 + 1;
-    int exitN = rand() % 78 + 1;
-    int exitE = rand() % 19 + 1;
-    int exitW = rand() % 19 + 1;
+    int exitS = rand() % 74 + 3;
+    int exitN = rand() % 74 + 3;
+    int exitE = rand() % 15 + 3;
+    int exitW = rand() % 15 + 3;
     
     //create borders
     for(int l = 0; l < 80; l++){
@@ -120,8 +209,8 @@ void seeder(char screen[21][80]){
             enqueue(queue, &tail, ((y-1) * 79 + x));
         }
     }
-
-    
+    roadPath(exitN, exitS, exitW, exitE);
+    martCenterHelper();
 }
 
 
