@@ -9,25 +9,40 @@ const char MOUNTAIN = '%';
 const char LONGGRASS = ':';
 const char CLEARING = '.';
 const char FOREST = '^';
-const char WATER = '`';
-
+const char WATER = '~';
+const char EXIT = '#';
 
 void seeder(char screen[21][80]){
     //queue's size
     const int SIZE = 1580; 
 
+    //initialize queue
     int head, tail;
     int queue[1580];
     initQueue(&head,&tail);
 
+    int exitS = rand() % 78 + 1;
+    int exitN = rand() % 78 + 1;
+    int exitE = rand() % 19 + 1;
+    int exitW = rand() % 19 + 1;
+    
     //create borders
     for(int l = 0; l < 80; l++){
         screen[0][l] = MOUNTAIN;
         screen[20][l] = MOUNTAIN;
+        if(l == exitS)
+             screen[20][l] = EXIT;
+        if(l == exitN)
+             screen[0][l] = EXIT;
     }
     for(int k = 0; k < 21; k++){
         screen[k][0] = MOUNTAIN;
         screen[k][79] = MOUNTAIN;
+        if(k == exitE)
+             screen[k][79] = EXIT;
+        if(k == exitW)
+             screen[k][0] = EXIT;
+        
     }
     //create empty spaces using "-"
     for(int n = 1; n < 20; n++){
