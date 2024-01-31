@@ -1,39 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "queue.h"
+
 
 char screen[21][80];
-char MOUNTAIN = '%';
-char LONGGRASS = ':';
-char CLEARING = '.';
-char terrain[] = {'%', ':', '.'};
+const char MOUNTAIN = '%';
+const char LONGGRASS = ':';
+const char CLEARING = '.';
+const char FOREST = '^';
+const char WATER = '`';
 
-void expandSeed(int x, int y, int num){
-    if(num == 2){
-        num = 0;
-    }
-
-    if(screen[x+1][y] == '-'){
-        screen[x+1][y] = terrain[num];
-        expandSeed(x+1, y, num++);
-    }
-    if(screen[x-1][y] == '-'){
-        screen[x-1][y] = terrain[num];
-        expandSeed(x-1, y, num++);
-    }
-    if(screen[x][y+1] == '-'){
-        screen[x][y+1] = terrain[num];
-        expandSeed(x, y+1, num++);
-    }
-    if(screen[x][y-1] == '-'){
-        screen[x][y-1] = terrain[num];
-        expandSeed(x, y-1, num++);
-    }
-
-}
 
 void seeder(char screen[21][80]){
-    
+    //queue's size
+    const int SIZE = 1580; 
+
+    int head, tail;
+    int queue[1580];
+    initQueue(&head,&tail);
+
     //create borders
     for(int l = 0; l < 80; l++){
         screen[0][l] = MOUNTAIN;
@@ -50,24 +36,77 @@ void seeder(char screen[21][80]){
         }
     }
     //seed mountains, long grass and clearings
+    int mountainsCoord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+
+    int forestCoord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+
+    int waterCoord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+
+    int longGrassCoord1 = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+
+    int longGrassCoord2 = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+
+    int clearingCoord1 = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+
+    int clearingCoord2 = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+
+
+    screen[longGrassCoord1 % 79][longGrassCoord1 / 79] = LONGGRASS;
+    screen[longGrassCoord2 % 79][longGrassCoord2 / 79] = LONGGRASS;
+
+    screen[mountainsCoord % 79][mountainsCoord / 79] = MOUNTAIN;
+
+    screen[clearingCoord1 % 79][clearingCoord1 / 79] = CLEARING;
+    screen[clearingCoord2 % 79][clearingCoord2 / 79] = CLEARING;
+
+    screen[forestCoord % 79][forestCoord / 79] = FOREST;
+
+    screen[waterCoord % 79][waterCoord / 79] = WATER;
     
-    int longGrassY = (rand() % 78) + 1;
-    int longGrassX = (rand() % 19) + 1;
+    enqueue(queue, &tail, longGrassCoord1);
+    enqueue(queue, &tail, longGrassCoord2);
+    enqueue(queue, &tail, forestCoord);
+    enqueue(queue, &tail, waterCoord);
+    enqueue(queue, &tail, mountainsCoord);
+    enqueue(queue, &tail, clearingCoord1);
+    enqueue(queue, &tail, clearingCoord2);
 
-    int mountainY = (rand() % 78) + 1;
-    int mountainX = (rand() % 19) + 1;
 
-    int clearingsY = (rand() % 78) + 1;
-    int clearingsX = (rand() % 19) + 1;
+    while(!empty(head, tail)){
+        int coord = dequeue(queue,&head);
+        int x =  coord % 79;
+        int y = coord / 79;
+        char seed;
+        //Check which biome and set seed to it
+        if(screen[x][y] == MOUNTAIN)
+            seed = MOUNTAIN;
+        else if(screen[x][y] == LONGGRASS)
+            seed = LONGGRASS;
+        else if(screen[x][y] == CLEARING)
+            seed = CLEARING;
+        else if(screen[x][y] == FOREST)
+            seed = FOREST;
+        else if(screen[x][y] == WATER)
+            seed = WATER;
+        if(screen[x+1][y] == '-'){
+            screen[x+1][y] = seed;
+            enqueue(queue, &tail, (y * 79 + (x+1)));
+        }
+        if(screen[x-1][y] == '-'){
+            screen[x-1][y] = seed;
+            enqueue(queue, &tail, (y * 79 + (x-1)));
+        }
+        if(screen[x][y+1] == '-'){
+            screen[x][y+1] = seed;
+            enqueue(queue, &tail, ((y+1) * 79 + x));
+        }
+        if(screen[x][y-1] == '-'){
+            screen[x][y-1] = seed;
+            enqueue(queue, &tail, ((y-1) * 79 + x));
+        }
+    }
 
-    screen[longGrassX][longGrassY] = LONGGRASS;
-    screen[mountainX][mountainY] = MOUNTAIN;
-    screen[clearingsX][clearingsY] = CLEARING;
-
-    //Initial expansion of seed
-    expandSeed(mountainX, mountainY, MOUNTAIN);
-    expandSeed(longGrassX, longGrassY, LONGGRASS);
-    expandSeed(clearingsX, clearingsY, CLEARING);
+    
 }
 
 
