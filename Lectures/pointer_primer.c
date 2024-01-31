@@ -37,11 +37,16 @@ int swapWrong(int x, int y){ //x is pointer to int, y is pointer to int
 
 }
 
-void populateFoo(struct foo f, int i, float d, char *s){
-    f.i = i;
-    f.f = d;
-    f.s = s;
+// We have three different operators in C:
+// The dereference operator: *
+// The arrow operator: -> (dereferences and then gets the field of a struct (only applies to structs))
+// The array index operator: [] (applies an offset and then dereferences)
+void populateFoo(struct foo *f, int i, float d, char *s){
+    f->i = i;
+    f->f = d;
+    f->s = s;
 }
+
 //How to read variable declarations in C: Start with the variable name.
 //                                        Go right when we can.
 //                                        Go left when we must.
@@ -59,7 +64,7 @@ int main(int argc, char *argv[]){
     // it is applied to. 
     swap(&i,&j);
 
-    populateFoo(f, 0, 3.14, "Hello World"); //Broken
+    populateFoo(&f, 0, 3.14, "Hello World"); //Broken
 
     printf("i = %d, j = %d\n", i, j);
     //  f.i = 0;

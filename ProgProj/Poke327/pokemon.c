@@ -6,20 +6,30 @@ char screen[21][80];
 char MOUNTAIN = '%';
 char LONGGRASS = ':';
 char CLEARING = '.';
+char terrain[] = {'%', ':', '.'};
 
-void expandSeed(int x, int y, char seed){
+void expandSeed(int x, int y, int num){
+    if(num == 2){
+        num = 0;
+    }
+
     if(screen[x+1][y] == '-'){
-        screen[x+1][y] = seed;
+        screen[x+1][y] = terrain[num];
+        expandSeed(x+1, y, num++);
     }
     if(screen[x-1][y] == '-'){
-        screen[x-1][y] = seed;
+        screen[x-1][y] = terrain[num];
+        expandSeed(x-1, y, num++);
     }
     if(screen[x][y+1] == '-'){
-        screen[x][y+1] = seed;
+        screen[x][y+1] = terrain[num];
+        expandSeed(x, y+1, num++);
     }
     if(screen[x][y-1] == '-'){
-        screen[x][y-1] = seed;
+        screen[x][y-1] = terrain[num];
+        expandSeed(x, y-1, num++);
     }
+
 }
 
 void seeder(char screen[21][80]){
@@ -58,12 +68,6 @@ void seeder(char screen[21][80]){
     expandSeed(mountainX, mountainY, MOUNTAIN);
     expandSeed(longGrassX, longGrassY, LONGGRASS);
     expandSeed(clearingsX, clearingsY, CLEARING);
-
-    // int j = 0;
-    // for(int e = 1; e < 25; e++){
-        
-
-    // }
 }
 
 
