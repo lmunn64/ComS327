@@ -4,7 +4,8 @@
 #include "queue.h"
 
 
-char screen[21][80];
+int currWorldRow, currWorldCol; //current world location
+
 const char MOUNTAIN = '%';
 const char LONGGRASS = ':';
 const char CLEARING = '.';
@@ -14,7 +15,15 @@ const char EXIT = '#';
 const char CENTER = 'C';
 const char MART = 'M';
 
-void placeMartandCenter(int i, int a){
+//current exits for current screen
+int exitN;
+int exitS;
+int exitW;
+int exitE;
+
+char *world[401][401];
+
+void placeMartandCenter(int i, int a, char screen[21][80]){
     screen[i][a-1] = MART;
     screen[i][a-2] = MART;
     screen[i-1][a-1] = MART;
@@ -25,17 +34,17 @@ void placeMartandCenter(int i, int a){
     screen[i-1][a+2] = CENTER;
 }
 
-void martCenterHelper(){
+void martCenterHelper(char screen[21][80]){
     int mandc = rand() % 17 + 2; //pokecenter and mart between 2 and 18
     for(int i = 0; i < 79; i++){
         if (screen[mandc][i] == EXIT){
             //checks surrounding area to make sure there are no paths interfering with possible mart and center placement.
             if (screen[mandc][i+1] != EXIT && screen[mandc][i+2] != EXIT && screen[mandc-1][i+1] != EXIT && screen[mandc-1][i+2] != EXIT && screen[mandc-1][i-1] != EXIT && screen[mandc-1][i-2] != EXIT){
-                placeMartandCenter(mandc, i);
+                placeMartandCenter(mandc, i, screen);
                 return;
             } 
             else {
-                martCenterHelper();
+                martCenterHelper(screen);
                 return;
             }  
         }
@@ -45,7 +54,7 @@ void martCenterHelper(){
 //TODO: implement bfs or dijkstras for this instead of dummy path finding
 //Ugly and gross
 //Adds pokecenters and marts as well
-void roadPath(int a, int b, int c, int d){
+void roadPath(int a, int b, int c, int d, char screen[21][80]){    
     //Pokecenter and mart location
     int mandc = rand() % 16 + 3;
     if (mandc == 12){
@@ -101,7 +110,8 @@ void roadPath(int a, int b, int c, int d){
         screen[d][j]= EXIT;    
         }
    }
-void seeder(char screen[21][80]){
+
+int seeder(char screen[21][80]){
     //queue's size
     const int SIZE = 1580; 
 
@@ -109,36 +119,7 @@ void seeder(char screen[21][80]){
     int head, tail;
     int queue[1580];
     initQueue(&head,&tail);
-
-    int exitS = rand() % 74 + 3;
-    int exitN = rand() % 74 + 3;
-    int exitE = rand() % 15 + 3;
-    int exitW = rand() % 15 + 3;
     
-    //create borders
-    for(int l = 0; l < 80; l++){
-        screen[0][l] = MOUNTAIN;
-        screen[20][l] = MOUNTAIN;
-        if(l == exitS)
-             screen[20][l] = EXIT;
-        if(l == exitN)
-             screen[0][l] = EXIT;
-    }
-    for(int k = 0; k < 21; k++){
-        screen[k][0] = MOUNTAIN;
-        screen[k][79] = MOUNTAIN;
-        if(k == exitE)
-             screen[k][79] = EXIT;
-        if(k == exitW)
-             screen[k][0] = EXIT;
-        
-    }
-    //create empty spaces using "-"
-    for(int n = 1; n < 20; n++){
-        for(int m = 1; m < 79; m++){
-        screen[n][m] = '-';
-        }
-    }
     //seed mountains, long grass and clearings
     int mountainsCoord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
 
@@ -209,20 +190,161 @@ void seeder(char screen[21][80]){
             enqueue(queue, &tail, ((y-1) * 79 + x));
         }
     }
-    roadPath(exitN, exitS, exitW, exitE);
-    martCenterHelper();
+
 }
 
+void createMap(int n, int s, int w, int e){
+    
+    //is this the first map or not
+    if(n == 0){
+        exitS = rand() % 74 + 3;
+        exitN = rand() % 74 + 3;
+        exitE = rand() % 15 + 3;
+        exitW = rand() % 15 + 3;
+    }
+    else{
+        exitS = s;
+        exitN = n;
+        exitE = e;
+        exitW = w; 
+        }
+    
+    char (*newScreen)[80] = malloc(sizeof(char[21][80]));
 
-int main(int argc, char *argv[]){
-    srand(time(NULL));
-    // printf("%s", 100);
-    seeder(screen);
+    //create borders
+    for(int l = 0; l < 80; l++){
+        newScreen[0][l] = MOUNTAIN;
+        newScreen[20][l] = MOUNTAIN;
+        if(l == exitS)
+             newScreen[20][l] = EXIT;
+        if(l == exitN)
+             newScreen[0][l] = EXIT;
+    }
+    for(int k = 0; k < 21; k++){
+        newScreen[k][0] = MOUNTAIN;
+        newScreen[k][79] = MOUNTAIN;
+        if(k == exitE)
+             newScreen[k][79] = EXIT;
+        if(k == exitW)
+             newScreen[k][0] = EXIT;
+        
+    }
+    //create empty spaces using "-"
+    for(int n = 1; n < 20; n++){
+        for(int m = 1; m < 79; m++){
+        newScreen[n][m] = '-';
+        }
+    }
+
+    seeder(newScreen);
+    roadPath(exitN, exitS, exitW, exitE, newScreen);
+    martCenterHelper(newScreen);
+    
+    world[currWorldRow][currWorldCol] = (char*)malloc(sizeof(newScreen));
+
+    world[currWorldRow][currWorldCol] = *newScreen;
+  
+}
+
+void printMap(int row, int col){
     for(int i = 0; i < 21; i++){
         for(int j = 0; j < 80; j++){
-        printf("%c", screen[i][j]);
+            printf("%c", world[row][col][i*80+j]);
+
     }
-    printf("\n");
+        printf("\n");
+    }
+    printf("%s %dx%d\n", "We are at coord", currWorldRow, currWorldCol);
+
+}
+
+void initMap(){
+    currWorldRow = 200;
+    currWorldCol = 200;
+    createMap(0,0,0,0);
+    printMap(currWorldRow, currWorldCol);
+}
+
+int move(char dir){
+    if(dir == 'n'){
+        currWorldRow--;
+        if(world[currWorldRow][currWorldCol] == NULL){
+            createMap(0,0,0,0);
+            printMap(currWorldRow, currWorldCol);  
+        }
+        else{
+            printMap(currWorldRow, currWorldCol); 
+        }
+    }
+    else if(dir == 's'){
+        currWorldRow++;
+        if(world[currWorldRow][currWorldCol] == NULL){
+           createMap(0,0,0,0);
+           printMap(currWorldRow, currWorldCol);
+        }
+        else{
+            printMap(currWorldRow, currWorldCol); 
+        }
+    }
+    else if(dir == 'w'){
+        currWorldCol--;
+        if(world[currWorldRow][currWorldCol] == NULL){
+            createMap(0,0,0,0);
+            printMap(currWorldRow, currWorldCol);
+        }
+        else{
+            printMap(currWorldRow, currWorldCol); 
+        }
+    }
+    else if(dir == 'e'){
+        currWorldCol++;
+        if(world[currWorldRow][currWorldCol] == NULL){
+            createMap(0,0,0,0);
+            printMap(currWorldRow, currWorldCol);
+        }
+        else{
+            printMap(currWorldRow, currWorldCol); 
+        }
+    }
+    // if(dir == 'f'){
+    //     printf("%s\n", "Where to?");
+    //     int x = getc(stdin);
+    //     int y = getc(stdin);
+    //     if(world[x][y] == NULL){
+    //         createMap(0,0,0,0);
+    //         printMap(x, y);
+    //     }
+    //     else{
+    //         printMap(x, y); 
+    //     }
+    // }
+}
+
+int main(int argc, char *argv[]){
+    char c;
+    srand(time(NULL));
+
+    initMap();
+
+    //allows multiple chars FIX
+    while((c = getc(stdin)) != 'q'){
+        switch(c){
+            case 'n':
+                move('n');
+                break;
+            case 's':
+                move('s');
+                break;
+            case 'w':
+                move('w');
+                break;
+            case 'e':
+                move('e');
+                break;
+            case 'f':
+                move('f');
+                break;
+        }
     }
     return 0;
 }
