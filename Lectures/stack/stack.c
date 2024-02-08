@@ -32,7 +32,7 @@ int stack_push(stack_t *s, int d){
     //sizeof is a static (i.e., compile time) operator that 
     //returns the number of bytes required to store the expression 
     //given as its parameter
-
+    
     if (!(n = malloc(sizeof (*n)))){
         return 1;
     } //memory allocator (going to give exactly how many bytes it takes to store stack_node)

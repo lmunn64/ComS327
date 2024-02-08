@@ -114,10 +114,26 @@ void roadPath(int a, int b, int c, int d, char screen[21][80]){
     }
 
     // move right until exit
-    for(int j = h; j < 80; j++){
+    for(int j = h; j < 79; j++){
         screen[d][j]= EXIT;    
         }
    }
+
+//probability calculation if pokecenters and marts will appear
+double manhattanProb(){
+    if(!(currWorldRow == 200 && currWorldCol == 200)){
+        double d = abs(currWorldRow-200) + abs(currWorldCol-200);
+        if(d > 200){
+            return .05;
+        }
+        double equation = d * -45;
+        equation /= 200.00;
+        equation += 50;
+        equation /= 100.00;
+        return equation;
+    }
+    return 1.0;
+}
 
 int seeder(char screen[21][80]){
     //queue's size
@@ -241,19 +257,18 @@ void createMap(){
     for(int l = 0; l < 80; l++){
         newMap->screen[0][l] = MOUNTAIN;
         newMap->screen[20][l] = MOUNTAIN;
-        if(l == currExitS && currWorldCol != 400)
+        if(l == currExitS && currWorldRow != 400)
              newMap->screen[20][l] = EXIT;
-        if(l == currExitN && currWorldCol != 0)
+        if(l == currExitN && currWorldRow != 0)
              newMap->screen[0][l] = EXIT;
     }
     for(int k = 0; k < 21; k++){
         newMap->screen[k][0] = MOUNTAIN;
         newMap->screen[k][79] = MOUNTAIN;
-        if(k == currExitE && currWorldRow != 400)
+        if(k == currExitE && currWorldCol != 400)
              newMap->screen[k][79] = EXIT;
-        if(k == currExitW && currWorldRow != 0)
+        if(k == currExitW && currWorldCol != 0)
              newMap->screen[k][0] = EXIT;
-        
     }
     //create empty spaces using "-"
     for(int n = 1; n < 20; n++){
@@ -264,10 +279,11 @@ void createMap(){
 
     seeder(newMap->screen);
     roadPath(currExitN, currExitS, currExitW, currExitE, newMap->screen);
-    martCenterHelper(newMap->screen);
-
+    double randomNum = ((double) rand()) / RAND_MAX;
+    if(randomNum < manhattanProb()){
+        martCenterHelper(newMap->screen);
+    }
     world[currWorldRow][currWorldCol] = newMap;
-    
 }
 
 void printMap(){
@@ -307,7 +323,7 @@ int move(char dir){
         } 
     }
     else if(dir == 's'){
-        if(currWorldRow != 401){
+        if(currWorldRow != 400){
             currWorldRow++;
             if(world[currWorldRow][currWorldCol] == NULL){
                 setExits();
@@ -339,7 +355,7 @@ int move(char dir){
         }
     }
     else if(dir == 'e'){
-        if(currWorldCol != 401){
+        if(currWorldCol != 400){
             currWorldCol++;
             if(world[currWorldRow][currWorldCol] == NULL){
                 setExits();
@@ -362,16 +378,22 @@ int move(char dir){
         scanf("%d",&x);
         printf("Enter Y Coordinate: ");
         scanf("%d",&y);
-        currWorldRow = abs(y+200);
-        currWorldCol = abs(x+200);
-        if(world[currWorldRow][currWorldCol] == NULL){
-            setExits();
-            createMap(currExitN,currExitS,currExitE,currExitW);
-            printMap();
+        if(x < 201 && y < 201){
+            currWorldRow = abs(y+200);
+            currWorldCol = abs(x+200);
+            if(world[currWorldRow][currWorldCol] == NULL){
+                setExits();
+                createMap(currExitN,currExitS,currExitE,currExitW);
+                printMap();
+            }
+            else{
+                printMap(); 
+            }
         }
         else{
-            printMap(); 
+            printf("Can't move there. OUT OF BOUNDS!\n");
         }
+       
     }
 }
 
