@@ -1,0 +1,72 @@
+commit f58f184252eb7310528d409209d13f580233c3ea
+Author: unknown <lmunn64@iastate.edu>
+Date:   Wed Feb 7 19:50:28 2024 -0600
+
+    1.02 completed with working gate connections, map generation, movement logic, and pokemart and center probability logic
+
+commit ebd05ee123603c44d6601a6dec8437ad2f868a7b
+Author: unknown <lmunn64@gmail.com>
+Date:   Wed Feb 7 18:17:23 2024 -0600
+
+    Exits connect, fly function and coordinates are properly displayed
+
+commit 85d8af8c4c47669640cb832898348405b16dadaf
+Author: unknown <lmunn64@iastate.edu>
+Date:   Tue Feb 6 22:19:29 2024 -0600
+
+    implemented world map which holds generated screens
+
+commit 98ffbd4fe6a79b5d77f29ca95dbd6e64907e2937
+Author: unknown <lmunn64@iastate.edu>
+Date:   Wed Jan 31 17:10:45 2024 -0600
+
+    Working and completed version 1.0.1
+
+commit 4df9d8eac35a5b6670a29739e0d22a0c0a7867fe
+Author: unknown <lmunn64@gmail.com>
+Date:   Tue Jan 30 22:17:03 2024 -0600
+
+    added exits on border
+
+commit 125df75c702ea0ffe77d1f4ba21b80ad4b6b17da
+Merge: 735aab2 33add5a
+Author: unknown <lmunn64@gmail.com>
+Date:   Tue Jan 30 21:56:01 2024 -0600
+
+    Merge branch 'main' of https://github.com/lmunn64/ComS327
+
+commit 735aab24c83f699b5d5dd8b9dcbed35c6ee5fce8
+Author: unknown <lmunn64@gmail.com>
+Date:   Tue Jan 30 21:55:40 2024 -0600
+
+    Created working generator without pokemarts and centers
+
+commit 33add5afc4dc64af76e3215214585373dfe3b5cd
+Author: Luke Munn <145295385+lmunn64@users.noreply.github.com>
+Date:   Tue Jan 30 19:54:15 2024 -0600
+
+    Update README.md
+
+commit 9ab1335ea6bb4170f99d46af39ff049cfa6b9b95
+Author: Luke Munn <145295385+lmunn64@users.noreply.github.com>
+Date:   Tue Jan 30 19:53:20 2024 -0600
+
+    Create README.md
+
+commit 8b9232dc63987eb2f9777cebc6365d90aac00a8a
+Author: unknown <lmunn64@iastate.edu>
+Date:   Tue Jan 30 19:34:47 2024 -0600
+
+    commit for desktop
+
+commit cd8210e513840d98e1e64df6204c1fe2ddf9e32c
+Author: unknown <lmunn64@iastate.edu>
+Date:   Tue Jan 30 10:32:53 2024 -0600
+
+    created expandSeed function which expands a char on the grid around it if the space around it is empty
+
+commit 3cd01ef3a82e732a8719dae170ba3c01e9cb98a7
+Author: unknown <lmunn64@iastate.edu>
+Date:   Tue Jan 30 09:34:28 2024 -0600
+
+    Initialized pokemon 1.01 with random seed placed for 3 terrains
