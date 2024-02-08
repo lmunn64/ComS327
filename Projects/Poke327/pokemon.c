@@ -3,6 +3,14 @@
 #include <time.h>
 #include "queue.h"
 
+//Individual map structure
+typedef struct Map {
+    char screen[21][80];
+    int exitN;
+    int exitS;
+    int exitW;
+    int exitE;
+} map;
 
 int currWorldRow, currWorldCol; //current world location
 
@@ -16,12 +24,12 @@ const char CENTER = 'C';
 const char MART = 'M';
 
 //current exits for current screen
-int exitN;
-int exitS;
-int exitW;
-int exitE;
+int currExitN;
+int currExitS;
+int currExitW;
+int currExitE;
 
-char *world[401][401];
+map *world[401][401];
 
 void placeMartandCenter(int i, int a, char screen[21][80]){
     screen[i][a-1] = MART;
@@ -192,133 +200,181 @@ int seeder(char screen[21][80]){
     }
 
 }
-
-void createMap(int n, int s, int w, int e){
-    
-    //is this the first map or not
-    if(n == 0){
-        exitS = rand() % 74 + 3;
-        exitN = rand() % 74 + 3;
-        exitE = rand() % 15 + 3;
-        exitW = rand() % 15 + 3;
+//Set exits for a newly created map and line them up with existing maps
+void setExits(){
+    if(world[currWorldRow+1][currWorldCol] != NULL){
+        currExitS = world[currWorldRow+1][currWorldCol]->exitS;
     }
     else{
-        exitS = s;
-        exitN = n;
-        exitE = e;
-        exitW = w; 
-        }
-    
-    char (*newScreen)[80] = malloc(sizeof(char[21][80]));
+        currExitS= rand() % 74 + 3;
+    }
+    if(world[currWorldRow-1][currWorldCol] != NULL){
+        currExitN = world[currWorldRow-1][currWorldCol]->exitN;
+    }
+    else{
+        currExitN= rand() % 74 + 3;
+    }
+    if(world[currWorldRow][currWorldCol+1] != NULL){
+        currExitE = world[currWorldRow][currWorldCol+1]->exitW;
+    }
+    else{
+        currExitE= rand() % 15 + 3;
+    }
+    if(world[currWorldRow][currWorldCol-1] != NULL){
+        currExitW = world[currWorldRow][currWorldCol-1]->exitE;
+    }
+    else{
+        currExitW= rand() % 15 + 3;
+    }
+}
+
+void createMap(){
+
+    map* newMap = malloc(sizeof(map));
+
+    newMap->exitS = currExitN;
+    newMap->exitN = currExitS;
+    newMap->exitE = currExitE;
+    newMap->exitW = currExitW;
 
     //create borders
     for(int l = 0; l < 80; l++){
-        newScreen[0][l] = MOUNTAIN;
-        newScreen[20][l] = MOUNTAIN;
-        if(l == exitS)
-             newScreen[20][l] = EXIT;
-        if(l == exitN)
-             newScreen[0][l] = EXIT;
+        newMap->screen[0][l] = MOUNTAIN;
+        newMap->screen[20][l] = MOUNTAIN;
+        if(l == currExitS && currWorldCol != 400)
+             newMap->screen[20][l] = EXIT;
+        if(l == currExitN && currWorldCol != 0)
+             newMap->screen[0][l] = EXIT;
     }
     for(int k = 0; k < 21; k++){
-        newScreen[k][0] = MOUNTAIN;
-        newScreen[k][79] = MOUNTAIN;
-        if(k == exitE)
-             newScreen[k][79] = EXIT;
-        if(k == exitW)
-             newScreen[k][0] = EXIT;
+        newMap->screen[k][0] = MOUNTAIN;
+        newMap->screen[k][79] = MOUNTAIN;
+        if(k == currExitE && currWorldRow != 400)
+             newMap->screen[k][79] = EXIT;
+        if(k == currExitW && currWorldRow != 0)
+             newMap->screen[k][0] = EXIT;
         
     }
     //create empty spaces using "-"
     for(int n = 1; n < 20; n++){
         for(int m = 1; m < 79; m++){
-        newScreen[n][m] = '-';
+        newMap->screen[n][m] = '-';
         }
     }
 
-    seeder(newScreen);
-    roadPath(exitN, exitS, exitW, exitE, newScreen);
-    martCenterHelper(newScreen);
-    
-    world[currWorldRow][currWorldCol] = (char*)malloc(sizeof(newScreen));
+    seeder(newMap->screen);
+    roadPath(currExitN, currExitS, currExitW, currExitE, newMap->screen);
+    martCenterHelper(newMap->screen);
 
-    world[currWorldRow][currWorldCol] = *newScreen;
-  
+    world[currWorldRow][currWorldCol] = newMap;
+    
 }
 
-void printMap(int row, int col){
+void printMap(){
     for(int i = 0; i < 21; i++){
         for(int j = 0; j < 80; j++){
-            printf("%c", world[row][col][i*80+j]);
-
-    }
+            printf("%c", world[currWorldRow][currWorldCol]->screen[i][j]);
+        }
         printf("\n");
     }
-    printf("%s %dx%d\n", "We are at coord", currWorldRow, currWorldCol);
+    printf("%s %dx%d\n", "You are at coordinate: ", currWorldCol-200, currWorldRow-200);
 
 }
 
 void initMap(){
     currWorldRow = 200;
     currWorldCol = 200;
-    createMap(0,0,0,0);
-    printMap(currWorldRow, currWorldCol);
+    setExits();
+    createMap(currExitN,currExitS,currExitE,currExitW);
+    printMap();
 }
 
 int move(char dir){
     if(dir == 'n'){
-        currWorldRow--;
-        if(world[currWorldRow][currWorldCol] == NULL){
-            createMap(0,0,0,0);
-            printMap(currWorldRow, currWorldCol);  
+        if(currWorldRow != 0){
+            currWorldRow--;
+            if(world[currWorldRow][currWorldCol] == NULL){
+                setExits();
+                createMap(currExitN,currExitS,currExitE,currExitW);
+                printMap();
+            }
+            else{
+                printMap(); 
+            }
         }
         else{
-            printMap(currWorldRow, currWorldCol); 
-        }
+            printf("Can't move there. OUT OF BOUNDS!\n");
+        } 
     }
     else if(dir == 's'){
-        currWorldRow++;
-        if(world[currWorldRow][currWorldCol] == NULL){
-           createMap(0,0,0,0);
-           printMap(currWorldRow, currWorldCol);
+        if(currWorldRow != 401){
+            currWorldRow++;
+            if(world[currWorldRow][currWorldCol] == NULL){
+                setExits();
+                createMap(currExitN,currExitS,currExitE,currExitW);
+                printMap();
+            }
+            else{
+                printMap(); 
+            }
         }
         else{
-            printMap(currWorldRow, currWorldCol); 
+            printf("Can't move there. OUT OF BOUNDS!\n");
         }
     }
     else if(dir == 'w'){
-        currWorldCol--;
-        if(world[currWorldRow][currWorldCol] == NULL){
-            createMap(0,0,0,0);
-            printMap(currWorldRow, currWorldCol);
+        if(currWorldCol != 0){
+            currWorldCol--;
+            if(world[currWorldRow][currWorldCol] == NULL){
+                setExits();
+                createMap(currExitN,currExitS,currExitE,currExitW);
+                printMap();
+            }
+            else{
+                printMap(); 
+            }
         }
         else{
-            printMap(currWorldRow, currWorldCol); 
+            printf("Can't move there. OUT OF BOUNDS!\n");
         }
     }
     else if(dir == 'e'){
-        currWorldCol++;
-        if(world[currWorldRow][currWorldCol] == NULL){
-            createMap(0,0,0,0);
-            printMap(currWorldRow, currWorldCol);
+        if(currWorldCol != 401){
+            currWorldCol++;
+            if(world[currWorldRow][currWorldCol] == NULL){
+                setExits();
+                createMap(currExitN,currExitS,currExitE,currExitW);
+                printMap();
+            }
+            else{
+                printMap(); 
+            }
         }
         else{
-            printMap(currWorldRow, currWorldCol); 
+            printf("Can't move there. OUT OF BOUNDS!\n");
         }
     }
-    // if(dir == 'f'){
-    //     printf("%s\n", "Where to?");
-    //     int x = getc(stdin);
-    //     int y = getc(stdin);
-    //     if(world[x][y] == NULL){
-    //         createMap(0,0,0,0);
-    //         printMap(x, y);
-    //     }
-    //     else{
-    //         printMap(x, y); 
-    //     }
-    // }
+    if(dir == 'f'){
+        int x;
+        int y;
+        printf("Where to?\n");
+        printf("Enter X Coordinate: ");
+        scanf("%d",&x);
+        printf("Enter Y Coordinate: ");
+        scanf("%d",&y);
+        currWorldRow = abs(y+200);
+        currWorldCol = abs(x+200);
+        if(world[currWorldRow][currWorldCol] == NULL){
+            setExits();
+            createMap(currExitN,currExitS,currExitE,currExitW);
+            printMap();
+        }
+        else{
+            printMap(); 
+        }
+    }
 }
+
 
 int main(int argc, char *argv[]){
     char c;
