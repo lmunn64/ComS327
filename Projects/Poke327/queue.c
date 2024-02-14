@@ -1,6 +1,8 @@
 #include "queue.h"
 #include <stdio.h>
 #include <stdlib.h>
+//QUEUE PROVIDED BY LearnC (https://www.learnc.net/c-data-structures/c-queue/)
+
 /*
     initialize queue pointers
 */
