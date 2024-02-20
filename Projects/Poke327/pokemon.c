@@ -212,6 +212,7 @@ static void hiker_path(char screen[21][80], int player)
     if ((path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y]    ][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y]][p->pos[dim_x] - 1].cost = ((p->cost + cost));
       hikerPaths[p->pos[dim_y]][p->pos[dim_x] - 1] = path[p->pos[dim_y]][p->pos[dim_x] - 1].cost;
+    //   printf("%d\n", hikerPaths[p->pos[dim_y]][p->pos[dim_x] - 1]  );
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn);
     }
     cost = hikerCost(path[p->pos[dim_y]   ][p->pos[dim_x]  + 1].terrain);
@@ -636,11 +637,11 @@ int main(int argc, char *argv[]){
 
     for(int i = 0; i < 21; i++){
         for(int j = 0; j < 80; j++){
-            if(hikerPaths[i][j] > 3000){
+            if(hikerPaths[i][j] == 0){
                 printf("   ");
             }
             else
-                printf("%02d ", hikerPaths[i][j] % 100);
+                printf("%d ", hikerPaths[i][j]);
         }
         printf("\n");
     }
