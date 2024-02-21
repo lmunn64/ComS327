@@ -10,6 +10,8 @@
 
 #define heightpair(pair) (m->height[pair[dim_y]][pair[dim_x]]);
 
+#define INF 9999
+
 //Individual map structure
 typedef struct Map {
     char screen[21][80];
@@ -18,6 +20,10 @@ typedef struct Map {
     int exitW;
     int exitE;
 } map;
+
+typedef struct distMap {
+    int screen[21][80];
+} distMap;
 
 typedef struct path {
   heap_node_t *hn;
@@ -71,6 +77,8 @@ const char CENTER = 'C';
 const char PLAYER = '@';
 const char MART = 'M';
 
+const int NPC_cost[2][11] = {{INF, INF, 10, 50, 50, 15, 10, 15, 15, INF, INF},{INF, INF, 10, 50, 50, 20, 10, INF, INF, INF, INF}};
+
 //current exits for current screen
 int currExitN;
 int currExitS;
@@ -84,45 +92,45 @@ static int32_t path_cmp(const void *key, const void *with) {
 //2d array of pointers to map structs
 map *world[401][401];
 
-int rivalPaths[21][80];
+distMap *paths[2];
 
-int hikerPaths[21][80];
-
-int hikerCost(terrain_type_t t){
-    if(t == ter_mountain){
-        return 15;
-    }
-    if(t == ter_boulder){
-        return SHRT_MAX;
-    }
-    if(t == ter_gate){
-        return SHRT_MAX;
-    }
-    if(t == ter_grass){
-        return 15;
-    }
-    if(t == ter_clearing){
-        return 10;
-    }
-    if(t == ter_forest){
-        return 15;
-    }
-    if(t == ter_water){
-        return SHRT_MAX;
-    }
-    if(t == ter_mart){
-        return 50;
-    }
-    if(t == ter_center){
-        return 50;
-    }
-    if(t == ter_path){
-        return 10;
-    }
-    
+int pathFindCost(terrain_type_t t, int i){
+    switch(t){
+        case ter_boulder:
+            return NPC_cost[i][0];
+            break;
+        case ter_tree:
+            return NPC_cost[i][1];
+            break;
+        case ter_path:
+            return NPC_cost[i][2];
+            break;
+        case ter_mart:
+            return NPC_cost[i][3];
+            break;
+        case ter_center:
+            return NPC_cost[i][4];
+            break;
+        case ter_grass:
+            return NPC_cost[i][5];
+            break;
+        case ter_clearing:
+            return NPC_cost[i][6];
+            break;
+        case ter_mountain:
+            return NPC_cost[i][7];
+            break;
+        case ter_forest:
+            return NPC_cost[i][8];
+            break;
+        case ter_water:
+            return NPC_cost[i][9];
+            break;
+        case ter_gate:
+            return NPC_cost[i][10];
+            break;
+        }
 }
-
-
 void placeMartandCenter(int i, int a, char screen[21][80]){
     screen[i][a-1] = ter_mart;
     screen[i][a-2] = ter_mart;
@@ -151,12 +159,13 @@ void martCenterHelper(char screen[21][80]){
     }
 }
 
-static void hiker_path(char screen[21][80], int player)
+static void dijkstras_path(char screen[21][80], int player, int character) //0 for hiker, 1 for rival
 {
   static path_t path[MAP_Y][MAP_X], *p;
   static uint32_t initialized = 0;
   heap_t h;
   uint32_t x, y;
+  distMap* distanceMaps = malloc(sizeof(distMap));
 
   if (!initialized) {
     for (y = 0; y < MAP_Y; y++) {
@@ -165,93 +174,96 @@ static void hiker_path(char screen[21][80], int player)
         path[y][x].pos[dim_x] = x;
       }
     }
+    
     initialized = 1;
   }
   
   for (y = 0; y < MAP_Y; y++) {
     for (x = 0; x < MAP_X; x++) {
-      path[y][x].cost = SHRT_MAX;
-      path[y][x].terrain = screen[y][x];
+        distanceMaps->screen[y][x] = INF;
+        path[y][x].cost = INF;
+        path[y][x].terrain = screen[y][x];
     }
   }
 
   path[player % 79][player / 79].cost = 0;
+  distanceMaps->screen[player % 79][player / 79] = 0;
 
   heap_init(&h, path_cmp, NULL);
   
-  for (y = 0; y < MAP_Y; y++) {
+  for (y = 0; y < MAP_Y ; y++) {
     for (x = 0; x < MAP_X; x++) {
       path[y][x].hn = heap_insert(&h, &path[y][x]);
     }
   }
 
+
   while ((p = heap_remove_min(&h))) {
     p->hn = NULL;
 
-    // if ((p->pos[dim_y] == to[dim_y]) && p->pos[dim_x] == to[dim_x]) {
-    //   for (x = to[dim_x], y = to[dim_y];
-    //        (x != from[dim_x]) || (y != from[dim_y]);
-    //        p = &path[y][x], x = p->from[dim_x], y = p->from[dim_y]) {
-    //     // // Don't overwrite the gate
-    //     // if (x != to[dim_x] || y != to[dim_y]) {
-    //     //   mapxy(x, y) = ter_path;
-    //     //   heightxy(x, y) = 0;
-    //     // }
-    //   }
-    //   heap_delete(&h);
-    //   return;
-    // }
-
-    int cost = hikerCost(path[p->pos[dim_y] - 1][p->pos[dim_x]    ].terrain);
+    int cost = pathFindCost(path[p->pos[dim_y] - 1][p->pos[dim_x]    ].terrain, character);
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost = ((p->cost + cost));
-      hikerPaths[p->pos[dim_y] - 1][p->pos[dim_x]    ] = path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost;
+      distanceMaps->screen[p->pos[dim_y] - 1][p->pos[dim_x]    ] = ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn);
     }
-    cost = hikerCost(path[p->pos[dim_y]    ][p->pos[dim_x] - 1].terrain);
+   
+    cost = pathFindCost(path[p->pos[dim_y]    ][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y]    ][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y]][p->pos[dim_x] - 1].cost = ((p->cost + cost));
-      hikerPaths[p->pos[dim_y]][p->pos[dim_x] - 1] = path[p->pos[dim_y]][p->pos[dim_x] - 1].cost;
-    //   printf("%d\n", hikerPaths[p->pos[dim_y]][p->pos[dim_x] - 1]  );
+      distanceMaps->screen[p->pos[dim_y]][p->pos[dim_x] - 1] = ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn);
     }
-    cost = hikerCost(path[p->pos[dim_y]   ][p->pos[dim_x]  + 1].terrain);
+
+    cost = pathFindCost(path[p->pos[dim_y]   ][p->pos[dim_x]  + 1].terrain, character);
     if ((path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y]    ][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y]][p->pos[dim_x] + 1].cost = ((p->cost + cost));
-      hikerPaths[p->pos[dim_y]][p->pos[dim_x] + 1] =  path[p->pos[dim_y]][p->pos[dim_x] + 1].cost;
+      distanceMaps->screen[p->pos[dim_y]][p->pos[dim_x] + 1] =  ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn);
     }
-    cost = hikerCost(path[p->pos[dim_y] + 1][p->pos[dim_x]    ].terrain);
+
+    cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x]    ].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost = ((p->cost + cost));
-      hikerPaths[p->pos[dim_y] + 1][p->pos[dim_x]    ] = path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost; 
+      distanceMaps->screen[p->pos[dim_y] + 1][p->pos[dim_x]    ] = ((p->cost + cost)); 
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn);
     }
-    cost = hikerCost(path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].terrain);
+
+    cost = pathFindCost(path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].cost = ((p->cost + cost));
-      hikerPaths[p->pos[dim_y] - 1][p->pos[dim_x] - 1] = path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].cost;
+      distanceMaps->screen[p->pos[dim_y] - 1][p->pos[dim_x] - 1] = ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].hn);
     }
-    cost = hikerCost(path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].terrain);
+
+    cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].cost = ((p->cost + cost));
-      hikerPaths[p->pos[dim_y] + 1][p->pos[dim_x] + 1] = path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].cost;
+      distanceMaps->screen[p->pos[dim_y] + 1][p->pos[dim_x] + 1] = ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].hn);
     }
-    cost = hikerCost(path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].terrain);
+    cost = pathFindCost(path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].terrain, character);
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].cost = ((p->cost + cost));
-      hikerPaths[p->pos[dim_y] - 1][p->pos[dim_x] + 1] =  path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].cost;
+      distanceMaps->screen[p->pos[dim_y] - 1][p->pos[dim_x] + 1] =  ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].hn);
     }
-    cost = hikerCost(path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].terrain);
+
+    cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].cost = ((p->cost + cost));
-      hikerPaths[p->pos[dim_y] + 1][p->pos[dim_x] - 1] = path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].cost; 
+      distanceMaps->screen[p->pos[dim_y] + 1][p->pos[dim_x] - 1] = ((p->cost + cost)); 
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].hn);
     }
   }
+
+  if(paths[0] != NULL){ //rival map
+    paths[1] = distanceMaps;
+  }
+  else //hiker map
+    paths[0] = distanceMaps;
+
+  
 
   heap_delete(&h);
       return;
@@ -485,7 +497,9 @@ void createMap(){
     }
     placePlayer(newMap->screen);
     world[currWorldRow][currWorldCol] = newMap;
-    hiker_path(newMap->screen, player);
+
+    dijkstras_path(newMap->screen, player, 0);
+    dijkstras_path(newMap->screen, player, 1);
 }
 
 void printMap(){
@@ -635,13 +649,25 @@ int main(int argc, char *argv[]){
 
     initMap();
 
+    printf("Hiker movement cost map:\n");
     for(int i = 0; i < 21; i++){
         for(int j = 0; j < 80; j++){
-            if(hikerPaths[i][j] == 0){
+            if(paths[0]->screen[i][j] > 3000){
                 printf("   ");
             }
             else
-                printf("%d ", hikerPaths[i][j]);
+                printf("%02d ", paths[0]->screen[i][j] % 100);
+        }
+        printf("\n");
+    }
+    printf("Rival movement cost map:\n");
+    for(int i = 0; i < 21; i++){
+        for(int j = 0; j < 80; j++){
+            if(paths[1]->screen[i][j] > 3000){
+                printf("   ");
+            }
+            else
+                printf("%02d ", paths[1]->screen[i][j] % 100);
         }
         printf("\n");
     }
