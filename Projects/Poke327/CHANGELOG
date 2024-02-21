@@ -1,3 +1,27 @@
+commit c68a21fbfe345e7f2e81d174e0f878a84eaf570f
+Author: unknown <lmunn64@iastate.edu>
+Date:   Tue Feb 20 18:50:57 2024 -0600
+
+    Completed 1.03 with working dijkstras representing the hiker and rival distance maps
+
+commit d9d255667aeb115295f1c59aa5fe4f5d74196c01
+Author: unknown <lmunn64@iastate.edu>
+Date:   Tue Feb 20 11:23:36 2024 -0600
+
+    working dijkstras however borders are being counted as 0, must fix. Only printing hiker map
+
+commit c9fed41d08fc11f75e748f74ce6c765f55b1072a
+Author: unknown <lmunn64@iastate.edu>
+Date:   Wed Feb 14 11:18:30 2024 -0600
+
+    Started 1.03. Changed terrain representation in code as enum and print as a switch case. Outter edges of map are not being printed as blank fordijkstras.
+
+commit 232e0371fb0dc3d69f83de024c05b5b69631e4ab
+Author: unknown <lmunn64@iastate.edu>
+Date:   Wed Feb 7 19:56:46 2024 -0600
+
+    added readme
+
 commit f58f184252eb7310528d409209d13f580233c3ea
 Author: unknown <lmunn64@iastate.edu>
 Date:   Wed Feb 7 19:50:28 2024 -0600
@@ -70,3 +94,4 @@ Author: unknown <lmunn64@iastate.edu>
 Date:   Tue Jan 30 09:34:28 2024 -0600
 
     Initialized pokemon 1.01 with random seed placed for 3 terrains
+
