@@ -172,7 +172,12 @@ void martCenterHelper(char screen[21][80]){
 
 static void dijkstras_path(char screen[21][80], int player, int character) //0 for hiker, 1 for rival
 {
-  static path_t path[MAP_Y][MAP_X], *p;
+  path_t **path= (path_t **)malloc(80 * sizeof(path_t *));
+  for(int i = 0; i < MAP_X; i++){
+    path[i] = (path_t *)malloc(21 * sizeof(path_t));
+  }
+  static path_t *p;
+  
   static uint32_t initialized = 0;
   heap_t h;
   uint32_t x, y;
@@ -515,12 +520,18 @@ void createMap(){
 
 //prints map to IO
 void printMap(){
+    int check;
     for(int i = 0; i < 21; i++){
         for(int j = 0; j < 80; j++){
+            check = 1;
             for(int k = 0; k < 2; k++){
-                if(NPC[k].y == i && NPC[k].x == j)
+                if(NPC[k].y == i && NPC[k].x == j){
                     putchar(NPC[k].symbol);
+                    check = 0;
+                    break;
                 }
+            }
+            if(check == 1){
                 switch (world[currWorldRow][currWorldCol]->screen[i][j]){
                     case ter_boulder:
                     case ter_mountain:
@@ -553,7 +564,7 @@ void printMap(){
                         putchar('@');
                         break;
                     }
-            
+                }
             }
         putchar('\n');
     }
@@ -666,6 +677,7 @@ void traffic(){
     heap_t h;
     
     heap_init(&h, path_cmp, NULL);
+
     for(int i = 0; i < 2; i++){
         heap_insert(&h, &NPC[i]);
     }
@@ -673,10 +685,10 @@ void traffic(){
     while ((p = heap_remove_min(&h))) {
         p->hn = NULL;
         moveNPCs(p);
-        printMap(p);
+        printMap();
         heap_insert(&h, p);
         usleep(250000);
-}
+    }
 }
 void initNPCs(int numtrainers){
 
