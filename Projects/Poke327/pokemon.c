@@ -205,8 +205,11 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
   }
 
   paths[character] = malloc(sizeof(distMap));
+
+  paths[character] = malloc(sizeof(distMap));
   for (y = 0; y < MAP_Y; y++) {
     for (x = 0; x < MAP_X; x++) {
+        paths[character]->screen[y][x] = INF;
         paths[character]->screen[y][x] = INF;
         path[y][x].cost = INF;
         path[y][x].terrain = screen[y][x];
@@ -215,10 +218,13 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
 
   path[player % 79][player / 79].cost = 0;
   paths[character]->screen[player % 79][player / 79] = 0;
+  paths[character]->screen[player % 79][player / 79] = 0;
 
   heap_init(&h, path_cmp, NULL);
   
   for (y = 0; y < MAP_Y ; y++) {
+    for (x = 0; x < MAP_X; x++) { 
+        path[y][x].hn = heap_insert(&h, &path[y][x]);
     for (x = 0; x < MAP_X; x++) { 
         path[y][x].hn = heap_insert(&h, &path[y][x]);
     }
@@ -232,12 +238,14 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x]    ] = ((p->cost + cost));
+      paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x]    ] = ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn);
     }
    
     cost = pathFindCost(path[p->pos[dim_y]    ][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y]    ][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y]][p->pos[dim_x] - 1].cost = ((p->cost + cost));
+      paths[character]->screen[p->pos[dim_y]][p->pos[dim_x] - 1] = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y]][p->pos[dim_x] - 1] = ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn);
     }
@@ -246,12 +254,14 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
     if ((path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y]    ][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y]][p->pos[dim_x] + 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y]][p->pos[dim_x] + 1] =  ((p->cost + cost));
+      paths[character]->screen[p->pos[dim_y]][p->pos[dim_x] + 1] =  ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn);
     }
 
     cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x]    ].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost = ((p->cost + cost));
+      paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x]    ] = ((p->cost + cost)); 
       paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x]    ] = ((p->cost + cost)); 
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn);
     }
@@ -260,6 +270,7 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x] - 1] = ((p->cost + cost));
+      paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x] - 1] = ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].hn);
     }
 
@@ -267,11 +278,13 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x] + 1] = ((p->cost + cost));
+      paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x] + 1] = ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].hn);
     }
     cost = pathFindCost(path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].terrain, character);
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].cost = ((p->cost + cost));
+      paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x] + 1] =  ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x] + 1] =  ((p->cost + cost));
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].hn);
     }
@@ -279,6 +292,7 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
     cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].cost = ((p->cost + cost));
+      paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x] - 1] = ((p->cost + cost)); 
       paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x] - 1] = ((p->cost + cost)); 
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].hn);
     }
@@ -371,6 +385,7 @@ int seeder(terrain_type_t screen[21][80]){
     //initialize queue
     int head, tail;
     int queue[1580];
+
 
     initQueue(&head,&tail);
     
@@ -487,38 +502,58 @@ void createMap(){
     world[currWorldRow][currWorldCol]->exitN = currExitS;
     world[currWorldRow][currWorldCol]->exitE = currExitE;
     world[currWorldRow][currWorldCol]->exitW = currExitW;
+    world[currWorldRow][currWorldCol]->exitS = currExitN;
+    world[currWorldRow][currWorldCol]->exitN = currExitS;
+    world[currWorldRow][currWorldCol]->exitE = currExitE;
+    world[currWorldRow][currWorldCol]->exitW = currExitW;
 
     //create borders
     for(int l = 0; l < 80; l++){
         world[currWorldRow][currWorldCol]->screen[0][l] = ter_boulder;
         world[currWorldRow][currWorldCol]->screen[20][l] = ter_boulder;
+        world[currWorldRow][currWorldCol]->screen[0][l] = ter_boulder;
+        world[currWorldRow][currWorldCol]->screen[20][l] = ter_boulder;
         if(l == currExitS && currWorldRow != 400)
              world[currWorldRow][currWorldCol]->screen[20][l] = ter_gate;
+             world[currWorldRow][currWorldCol]->screen[20][l] = ter_gate;
         if(l == currExitN && currWorldRow != 0)
+             world[currWorldRow][currWorldCol]->screen[0][l] = ter_gate;
              world[currWorldRow][currWorldCol]->screen[0][l] = ter_gate;
     }
     for(int k = 0; k < 21; k++){
         world[currWorldRow][currWorldCol]->screen[k][0] = ter_boulder;
         world[currWorldRow][currWorldCol]->screen[k][79] = ter_boulder;
+        world[currWorldRow][currWorldCol]->screen[k][0] = ter_boulder;
+        world[currWorldRow][currWorldCol]->screen[k][79] = ter_boulder;
         if(k == currExitE && currWorldCol != 400)
              world[currWorldRow][currWorldCol]->screen[k][79] = ter_gate;
+             world[currWorldRow][currWorldCol]->screen[k][79] = ter_gate;
         if(k == currExitW && currWorldCol != 0)
+             world[currWorldRow][currWorldCol]->screen[k][0] = ter_gate;
              world[currWorldRow][currWorldCol]->screen[k][0] = ter_gate;
     }
     //create empty spaces using "-"
     for(int n = 1; n < 20; n++){
         for(int m = 1; m < 79; m++){
         world[currWorldRow][currWorldCol]->screen[n][m] = ter_default;
+        world[currWorldRow][currWorldCol]->screen[n][m] = ter_default;
         }
     }
 
     seeder(world[currWorldRow][currWorldCol]->screen);
     roadPath(currExitN, currExitS, currExitW, currExitE, world[currWorldRow][currWorldCol]->screen);
+    seeder(world[currWorldRow][currWorldCol]->screen);
+    roadPath(currExitN, currExitS, currExitW, currExitE, world[currWorldRow][currWorldCol]->screen);
     double randomNum = ((double) rand()) / RAND_MAX;
     if(randomNum < manhattanProb()){
         martCenterHelper(world[currWorldRow][currWorldCol]->screen);
+        martCenterHelper(world[currWorldRow][currWorldCol]->screen);
     }
     placePlayer(world[currWorldRow][currWorldCol]->screen);
+    placePlayer(world[currWorldRow][currWorldCol]->screen);
+
+    dijkstras_path(world[currWorldRow][currWorldCol]->screen, player, 0);
+    dijkstras_path(world[currWorldRow][currWorldCol]->screen, player, 1);
 
     dijkstras_path(world[currWorldRow][currWorldCol]->screen, player, 0);
     dijkstras_path(world[currWorldRow][currWorldCol]->screen, player, 1);
@@ -742,6 +777,7 @@ void traffic(){
         usleep(250000);
     }
 }
+
 
 void initNPCs(int numtrainers){
     if(numTrainers > 2){
