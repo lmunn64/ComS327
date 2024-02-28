@@ -14,9 +14,34 @@
 #define INF 9999
 #define numTrainers 9
 
+typedef enum terrain_type {
+  ter_debug,
+  ter_boulder,
+  ter_tree,
+  ter_path,
+  ter_mart,
+  ter_center,
+  ter_grass,
+  ter_clearing,
+  ter_mountain,
+  ter_forest,
+  ter_water,
+  ter_gate,
+  ter_player,
+  ter_default
+} terrain_type_t;
+
+
+typedef struct heapNode{
+    int weight;
+    int mapx;
+    int mapy;
+    int totalDist;
+    int id;
+} heapNode;
 //Individual map structure
 typedef struct Map {
-    char screen[21][80];
+    terrain_type_t screen[21][80];
     int exitN;
     int exitS;
     int exitW;
@@ -41,26 +66,10 @@ typedef enum dim {
   num_dims
 } dim_t;
 
-typedef enum terrain_type {
-  ter_debug,
-  ter_boulder,
-  ter_tree,
-  ter_path,
-  ter_mart,
-  ter_center,
-  ter_grass,
-  ter_clearing,
-  ter_mountain,
-  ter_forest,
-  ter_water,
-  ter_gate,
-  ter_player,
-  ter_default
-} terrain_type_t;
 
 typedef struct character {
   heap_node_t *hn;
-  char symbol;
+  char symbol; 
   char *dir;
   int next_turn;
   int sequence_num;
@@ -102,6 +111,9 @@ static int32_t path_cmp(const void *key, const void *with) {
   return ((path_t *) key)->cost - ((path_t *) with)->cost;
 }
 
+static int32_t turn_cmp(const void *key, const void *with) {
+  return ((character_t *) key)->next_turn - ((character_t *) with)->next_turn;
+}
 //2d array of pointers to map structs
 map *world[401][401];
 
@@ -144,7 +156,8 @@ int pathFindCost(terrain_type_t t, int i){
             break;
         }
 }
-void placeMartandCenter(int i, int a, char screen[21][80]){
+
+void placeMartandCenter(int i, int a, terrain_type_t screen[21][80]){
     screen[i][a-1] = ter_mart;
     screen[i][a-2] = ter_mart;
     screen[i-1][a-1] = ter_mart;
@@ -155,7 +168,7 @@ void placeMartandCenter(int i, int a, char screen[21][80]){
     screen[i-1][a+2] = ter_center;
 }
 
-void martCenterHelper(char screen[21][80]){
+void martCenterHelper(terrain_type_t screen[21][80]){
     int mandc = rand() % 17 + 2; //pokecenter and mart between 2 and 18
     for(int i = 0; i < 79; i++){
         if (screen[mandc][i] == ter_path){
@@ -172,14 +185,15 @@ void martCenterHelper(char screen[21][80]){
     }
 }
 
-static void dijkstras_path(char screen[21][80], int player, int character) //0 for hiker, 1 for rival
+static void dijkstras_path(terrain_type_t screen[21][80], int player, int character) //0 for hiker, 1 for rival
 {
   heap_t h;
   uint32_t x, y;  
-  static path_t path[MAP_Y][MAP_X],  *p;
+  static path_t path[MAP_Y][MAP_X];
+  path_t *p = malloc(sizeof(path_t));
+
   static uint32_t initialized = 0;
  
-
   if (!initialized) {
     for (y = 0; y < MAP_Y; y++) {
       for (x = 0; x < MAP_X; x++) {
@@ -269,13 +283,14 @@ static void dijkstras_path(char screen[21][80], int player, int character) //0 f
       heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].hn);
     }
   }
-
+  
+  free(p);
   heap_delete(&h);
       return;
 }
 
 //TODO: implement bfs or dijkstras for this instead of dummy path finding
-void roadPath(int a, int b, int c, int d, char screen[21][80]){    
+void roadPath(int a, int b, int c, int d, terrain_type_t screen[21][80]){    
 
     int mandc = rand() % 16 + 3;
     if (mandc == 12){
@@ -349,7 +364,7 @@ double manhattanProb(){
 }
 
 //Seeds all of the terrain in a map
-int seeder(char screen[21][80]){
+int seeder(terrain_type_t screen[21][80]){
     //queue's size
     const int SIZE = 1580; 
 
@@ -451,18 +466,22 @@ void setExits(){
 }
 
 //places player character randomly on road
-void placePlayer(char screen[21][80]){
+void placePlayer(terrain_type_t screen[21][80]){
     player = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
     while(screen[player % 79][player / 79] != ter_path){
         player = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
     }
+    character_t* pc = malloc(sizeof(character_t));
+    pc->symbol = '@';
+    pc->x = player / 79;
+    pc->y = player % 79;
     screen[player % 79][player / 79] = ter_player;
 }
 
 //Creates map
 void createMap(){
 
-    world[currWorldRow][currWorldCol]= malloc(sizeof(map));
+    world[currWorldRow][currWorldCol] = malloc(sizeof(map));
 
     world[currWorldRow][currWorldCol]->exitS = currExitN;
     world[currWorldRow][currWorldCol]->exitN = currExitS;
@@ -500,7 +519,7 @@ void createMap(){
         martCenterHelper(world[currWorldRow][currWorldCol]->screen);
     }
     placePlayer(world[currWorldRow][currWorldCol]->screen);
-    free(world[currWorldRow][currWorldCol]);
+
     dijkstras_path(world[currWorldRow][currWorldCol]->screen, player, 0);
     dijkstras_path(world[currWorldRow][currWorldCol]->screen, player, 1);
 
@@ -565,131 +584,93 @@ void moveFromDirection(character_t *t){
     if(direction == "n"){
             t->y = t->y-1;
             t->x = t->x;
-        }
-        if(direction == "w"){
+        } 
+    else if (direction == "w"){
             t->y = t->y;
             t->x = t->x-1;
         }
-        if (direction == "nw"){
+    else if (direction == "nw"){
             t->y = t->y-1;
             t->x = t->x-1;
         }
-        if (direction == "s"){
+    else if (direction == "s"){
             t->y = t->y+1;
             t->x = t->x;
         }
-        if (direction == "e"){
+    else if (direction == "e"){
             t->y = t->y;
             t->x = t->x+1;
         }
-        if (direction == "se"){
+    else if (direction == "se"){
             t->y = t->y+1;
             t->x = t->x+1;
         }
-        if (direction == "ne"){
+    else if (direction == "ne"){
             t->y = t->y-1;
             t->x = t->x+1;
         }
-        if (direction == "sw"){
+    else if (direction == "sw"){
             t->y = t->y+1;
             t->x = t->x-1;
         }
 }
 
+void moveFollowers(character_t *t, int character){
+    int minX = t->x;
+    int minY = t->y;
+    int min = INF;
+
+    if(min > paths[character]->screen[minY-1][minX] && paths[character]->screen[minY-1][minX] != 0){
+        min = paths[character]->screen[minY-1][minX];
+        t->y = minY-1;
+        t->x = minX;
+    }
+    if(min > paths[character]->screen[minY][minX-1] && paths[character]->screen[minY][minX-1] != 0){
+        t->y = minY;
+        t->x = minX-1;
+        min = paths[character]->screen[minY][minX-1];
+    }
+    if (min > paths[character]->screen[minY-1][minX-1] && paths[character]->screen[minY-1][minX-1] != 0){
+        t->y = minY-1;
+        t->x = minX-1;
+        min = paths[character]->screen[minY-1][minX-1];
+    }
+    if (min > paths[character]->screen[minY+1][minX] && paths[character]->screen[minY+1][minX] != 0){
+        t->y = minY+1;
+        t->x = minX;
+        min = paths[character]->screen[minY+1][minX];
+    }
+    if (min > paths[character]->screen[minY][minX+1] && paths[character]->screen[minY][minX+1] != 0){
+        t->y = minY;
+        t->x = minX+1;
+        min = paths[character]->screen[minY][minX+1];
+    }
+    if (min > paths[character]->screen[minY+1][minX+1] && paths[character]->screen[minY+1][minX+1] != 0){
+        t->y = minY+1;
+        t->x = minX+1;
+        min = paths[character]->screen[minY+1][minX+1];
+    }
+    if (min > paths[character]->screen[minY-1][minX+1] && paths[character]->screen[minY-1][minX+1] != 0){
+        t->y = minY-1;
+        t->x = minX+1;
+        min = paths[character]->screen[minY-1][minX+1];
+    }
+    if (min > paths[character]->screen[minY+1][minX-1] && paths[character]->screen[minY+1][minX-1] != 0){
+        t->y = minY+1;
+        t->x = minX-1;
+        t->next_turn = t->next_turn;
+        min = paths[character]->screen[minY+1][minX-1];
+    }
+}\
+
 void moveNPCs(character_t *t){
     //if hiker
     if(t->symbol == 'h'){
-        int minX = t->x;
-        int minY = t->y;
-        int min = INF;
-
-        if(min > paths[0]->screen[minY-1][minX] && paths[0]->screen[minY-1][minX] != 0){
-            min = paths[0]->screen[minY-1][minX];
-            t->y = minY-1;
-            t->x = minX;
-        }
-        if(min > paths[0]->screen[minY][minX-1] && paths[0]->screen[minY][minX-1] != 0){
-            t->y = minY;
-            t->x = minX-1;
-            min = paths[0]->screen[minY][minX-1];
-        }
-        if (min > paths[0]->screen[minY-1][minX-1] && paths[0]->screen[minY-1][minX-1] != 0){
-            t->y = minY-1;
-            t->x = minX-1;
-            min = paths[0]->screen[minY-1][minX-1];
-        }
-        if (min > paths[0]->screen[minY+1][minX] && paths[0]->screen[minY+1][minX] != 0){
-            t->y = minY+1;
-            t->x = minX;
-            min = paths[0]->screen[minY+1][minX];
-        }
-        if (min > paths[0]->screen[minY][minX+1] && paths[0]->screen[minY][minX+1] != 0){
-            t->y = minY;
-            t->x = minX+1;
-            min = paths[0]->screen[minY][minX+1];
-        }
-        if (min > paths[0]->screen[minY+1][minX+1] && paths[0]->screen[minY+1][minX+1] != 0){
-            t->y = minY+1;
-            t->x = minX+1;
-            min = paths[0]->screen[minY+1][minX+1];
-        }
-        if (min > paths[0]->screen[minY-1][minX+1] && paths[0]->screen[minY-1][minX+1] != 0){
-            t->y = minY-1;
-            t->x = minX+1;
-            min = paths[0]->screen[minY-1][minX+1];
-        }
-        if (min > paths[0]->screen[minY+1][minX-1] && paths[0]->screen[minY+1][minX-1] != 0){
-            t->y = minY+1;
-            t->x = minX-1;
-            min = paths[0]->screen[minY+1][minX-1];
-        }
+        moveFollowers(t, 0);
     }
     //if rival
     else if(t->symbol == 'r'){
-        int minX = t->x;
-        int minY = t->y;
-        int min = INF;
-
-        if(min > paths[1]->screen[minY-1][minX] && paths[1]->screen[minY-1][minX] != 1){
-            min = paths[1]->screen[minY-1][minX];
-            t->y = minY-1;
-            t->x = minX;
-        }
-        if(min > paths[1]->screen[minY][minX-1] && paths[1]->screen[minY][minX-1] != 1){
-            t->y = minY;
-            t->x = minX-1;
-            min = paths[1]->screen[minY][minX-1];
-        }
-        if (min > paths[1]->screen[minY-1][minX-1] && paths[1]->screen[minY-1][minX-1] != 1){
-            t->y = minY-1;
-            t->x = minX-1;
-            min = paths[1]->screen[minY-1][minX-1];
-        }
-        if (min > paths[1]->screen[minY+1][minX] && paths[1]->screen[minY+1][minX] != 1){
-            t->y = minY+1;
-            t->x = minX;
-            min = paths[1]->screen[minY+1][minX];
-        }
-        if (min > paths[1]->screen[minY][minX+1] && paths[1]->screen[minY][minX+1] != 1){
-            t->y = minY;
-            t->x = minX+1;
-            min = paths[1]->screen[minY][minX+1];
-        }
-        if (min > paths[1]->screen[minY+1][minX+1] && paths[1]->screen[minY+1][minX+1] != 1){
-            t->y = minY+1;
-            t->x = minX+1;
-            min = paths[1]->screen[minY+1][minX+1];
-        }
-        if (min > paths[1]->screen[minY-1][minX+1] && paths[1]->screen[minY-1][minX+1] != 1){
-            t->y = minY-1;
-            t->x = minX+1;
-            min = paths[1]->screen[minY-1][minX+1];
-        }
-        if (min > paths[1]->screen[minY+1][minX-1] && paths[1]->screen[minY+1][minX-1] != 1){
-            t->y = minY+1;
-            t->x = minX-1;
-            min = paths[1]->screen[minY+1][minX-1];
-        }
+        moveFollowers(t, 1);
     }
     else if(t->symbol = 'w'){ //wanderer
         char terr = world[currWorldRow][currWorldCol]->screen[t->y-1][t->x];
@@ -747,7 +728,7 @@ void traffic(){
     static character_t *p;
     heap_t h;
     
-    heap_init(&h, path_cmp, NULL);
+    heap_init(&h, turn_cmp, NULL);
 
     for(int i = 0; i < 2; i++){
         heap_insert(&h, &NPC[i]);
@@ -763,24 +744,33 @@ void traffic(){
 }
 
 void initNPCs(int numtrainers){
+    if(numTrainers > 2){
+        character_t* rival = malloc(sizeof(character_t));
+        rival->symbol = 'r';
+        int rival_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        while(world[currWorldRow][currWorldCol]->screen[rival_coord % 79][rival_coord / 79] == ter_boulder || world[currWorldRow][currWorldCol]->screen[rival_coord % 79][rival_coord / 79] == ter_forest || world[currWorldRow][currWorldCol]->screen[rival_coord % 79][rival_coord / 79] == ter_water || world[currWorldRow][currWorldCol]->screen[rival_coord % 79][rival_coord / 79] == ter_mountain){
+            rival_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        }
+        rival->y = rival_coord % 79;
+        rival->x = rival_coord / 79;
+        
+        character_t* hiker = malloc(sizeof(character_t));
 
-    character_t* rival = malloc(sizeof(character_t));
+        hiker->symbol = 'h';
+        int hiker_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
 
-    rival->symbol = 'r';
-    int rival_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
-    rival->y = rival_coord % 79;
-    rival->x = rival_coord / 79;
+        while(world[currWorldRow][currWorldCol]->screen[hiker_coord % 79][hiker_coord / 79] == ter_boulder || world[currWorldRow][currWorldCol]->screen[hiker_coord % 79][hiker_coord / 79] == ter_water){
+            hiker_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        }
+        hiker->y = hiker_coord % 79;
+        hiker->x = hiker_coord / 79;
+
+        NPC[0] = *hiker;
+        NPC[1] = *rival;
+
+        numtrainers -= 2;
+    }
     
-    character_t* hiker = malloc(sizeof(character_t));
-
-    hiker->symbol = 'h';
-    int hiker_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
-    hiker->y = hiker_coord % 79;
-    hiker->x = hiker_coord / 79;
-
-    NPC[0] = *hiker;
-    NPC[1] = *rival;
-    numtrainers -= 2;
 
     while(numtrainers){
         
