@@ -12,8 +12,10 @@
 #define heightpair(pair) (m->height[pair[dim_y]][pair[dim_x]]);
 
 #define INF 9999
-#define numTrainers 9
 
+#define NPCS numTrainers
+
+int numTrainers = 9;
 typedef enum terrain_type {
   ter_debug,
   ter_boulder,
@@ -78,10 +80,9 @@ typedef struct character {
 } character_t;
 
 
-
 int player;
 
-character_t NPC[numTrainers];
+character_t NPC[INF];
 
 typedef int16_t pair_t[num_dims];
 
@@ -97,7 +98,7 @@ const char CENTER = 'C';
 const char PLAYER = '@';
 const char MART = 'M';
 
-const int NPC_cost[2][11] = {{INF, INF, 10, 50, 50, 15, 10, 15, 15, INF, INF},{INF, INF, 10, 50, 50, 20, 10, INF, INF, INF, INF}};
+const int NPC_cost[3][11] = {{INF, INF, 10, 50, 50, 15, 10, 15, 15, INF, INF},{INF, INF, 10, 50, 50, 20, 10, INF, INF, INF, INF},{INF, INF, 10, 50, 50, 20, 10, 30, INF, INF, INF}};
 
 char *NPC_moves[] = {"n","s","w","e","nw","se","ne","sw"};
 
@@ -536,7 +537,7 @@ void printMap(){
     for(int i = 0; i < 21; i++){
         for(int j = 0; j < 80; j++){
             check = 1;
-            for(int k = 0; k < 3; k++){
+            for(int k = 0; k < numTrainers; k++){
                 if(NPC[k].y == i && NPC[k].x == j){
                     putchar(NPC[k].symbol);
                     check = 0;
@@ -572,9 +573,6 @@ void printMap(){
                     case ter_water:
                         putchar('~');
                         break;
-                    case ter_player:
-                        putchar('@');
-                        break;
                     }
                 }
             }
@@ -586,37 +584,71 @@ void printMap(){
 
 void moveFromDirection(character_t *t){
     int direction = t->dir;
-    if(direction == 0){
+    int minX = t->x;
+    int minY = t->y;
+
+    int a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0;
+    for(int i = 0; i < numTrainers; i++){
+        if(NPC[i].sequence_num != t->sequence_num){
+            character_t neighbor = NPC[i];
+            int neighborCoord = neighbor.x * 79 + neighbor.y;
+            if(minX == neighbor.x && minY - 1 == neighbor.y)
+                a = 1;
+            if(minX-1 == neighbor.x && minY == neighbor.y)
+                b = 1;
+            if(minX-1 == neighbor.x && minY - 1 == neighbor.y)
+                c = 1;
+            if(minX == neighbor.x && minY + 1 == neighbor.y)
+                d = 1;
+            if(minX+1 == neighbor.x &&  minY == neighbor.y)
+                e = 1;                        
+            if(minX+1 == neighbor.x && minY + 1 == neighbor.y)
+                f = 1;                
+            if(minX+1 == neighbor.x && minY - 1 == neighbor.y)
+                g = 1;                
+            if(minX-1 == neighbor.x && minY + 1 == neighbor.y)
+                h = 1;                
+        }
+    }
+    if(direction == 0 && a == 0){
             t->y = t->y-1;
             t->x = t->x;
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX], 2);
         } 
-    else if (direction == 2){
+    else if (direction == 2 && b == 0){
             t->y = t->y;
             t->x = t->x-1;
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX-1], 2);
         }
-    else if (direction == 4){
+    else if (direction == 4 && c == 0){
             t->y = t->y-1;
             t->x = t->x-1;
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX-1], 2);
         }
-    else if (direction == 1){
+    else if (direction == 1 && d == 0){
             t->y = t->y+1;
             t->x = t->x;
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX], 2);
         }
-    else if (direction == 3){
+    else if (direction == 3 && e == 0){
             t->y = t->y;
             t->x = t->x+1;
+             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX+1], 2);
         }
-    else if (direction == 5){
+    else if (direction == 5 && f == 0){
             t->y = t->y+1;
             t->x = t->x+1;
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX+1], 2);
         }
-    else if (direction == 6){
+    else if (direction == 6 && g == 0){
             t->y = t->y-1;
             t->x = t->x+1;
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX+1], 2);
         }
-    else if (direction == 7){
+    else if (direction == 7 && h == 0){
             t->y = t->y+1;
             t->x = t->x-1;
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX-1], 2);
         }
 }
 
@@ -625,7 +657,7 @@ void moveFollowers(character_t *t, int character){
     int minY = t->y;
     int min = INF;
     int a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < numTrainers; i++){
         if(NPC[i].sequence_num != t->sequence_num){
             character_t neighbor = NPC[i];
             int neighborCoord = neighbor.x * 79 + neighbor.y;
@@ -699,6 +731,88 @@ void moveFollowers(character_t *t, int character){
     }
 }\
 
+int getWandererDirection(character_t *t){
+    int direction = rand() % 8;
+    int c = 0;
+    while(c == 0){
+        direction = rand() % 8;
+        if(direction == 0){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    c = 1;
+            }
+            else if(direction == 2){
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    c = 1;
+            }
+            else if (direction == 4){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    c = 1;
+            }
+            else if (direction == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    c = 1;
+            }
+            else if (direction == 3){
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    c = 1;
+            }
+            else if (direction == 5){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                   c = 1;
+            }
+            else if (direction == 6){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    c = 1;
+            }
+            else if (direction == 7){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    c = 1;
+            }
+    }
+    return direction;
+}
+
+int getExplorerDirection(character_t *t){
+    int direction = rand() % 8;
+    int c = 0;
+    while(c == 0){
+        direction = rand() % 8;
+        if(direction == 0){
+            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] != ter_water && world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] != ter_boulder && world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] != ter_forest && world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] != ter_gate)
+                c = 1;
+        }
+        else if(direction == 2){
+            if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] != ter_water && world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] != ter_boulder && world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] != ter_forest && world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] != ter_gate)
+                c = 1;
+        }
+        else if (direction == 4){
+            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] != ter_water && world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] != ter_boulder && world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] != ter_forest && world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] != ter_gate)
+                c = 1;
+        }
+        else if (direction == 1){
+            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] != ter_water && world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] != ter_boulder && world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] != ter_forest && world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] != ter_gate)
+                c = 1;
+        }
+        else if (direction == 3){
+            if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] != ter_water && world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] != ter_boulder && world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] != ter_forest && world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] != ter_gate)
+                c = 1;
+        }
+        else if (direction == 5){
+            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] != ter_water && world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] != ter_boulder && world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] != ter_forest && world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] != ter_gate)
+                c = 1;
+        }
+        else if (direction == 6){
+            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] != ter_water && world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] != ter_boulder && world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] != ter_forest && world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] != ter_gate)
+                c = 1;
+        }
+        else if (direction == 7){
+            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] != ter_water && world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] != ter_boulder && world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] != ter_forest && world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] != ter_gate)
+                c = 1;
+        }
+    }
+    return direction;
+}
+
 void moveNPCs(character_t *t){
     //if hiker
     if(t->symbol == 'h'){
@@ -708,63 +822,125 @@ void moveNPCs(character_t *t){
     else if(t->symbol == 'r'){
         moveFollowers(t, 1);
     }
-    else if(t->symbol = '@'){ //pc doesnt move
-        t->next_turn = t->next_turn + 10;
-        return;
+    else if(t->symbol == '@'){
+        t->next_turn += 10;
     }
-    else if(t->symbol = 'w'){ //wanderer
-        char terr = world[currWorldRow][currWorldCol]->screen[t->y-1][t->x];
-        if(0){ //if hit NEW terrain random 
-            int randDir = rand() % 8;
-            while(randDir == t->dir)
-                randDir = rand() % 8;
-            t->dir = randDir;
-        }
+    else if(t->symbol == 'w'){ //wanderer
+        int direction = t->dir;//if hit IMPASSIBLE terrain random 
+         //if hit terrain reverse 
+            if(direction == 0){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    t->dir = getWandererDirection(t);
+            }
+            else if(direction == 2){
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    t->dir = getWandererDirection(t);
+            }
+            else if (direction == 4){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    t->dir = getWandererDirection(t);
+            }
+            else if (direction == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    t->dir = getWandererDirection(t);
+            }
+            else if (direction == 3){
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    t->dir = getWandererDirection(t);
+            }
+            else if (direction == 5){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                   t->dir = getWandererDirection(t);
+            }
+            else if (direction == 6){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    t->dir = getWandererDirection(t);
+            }
+            else if (direction == 7){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+                    t->dir = getWandererDirection(t);
+            }
+        //now move from rand direction
         moveFromDirection(t);
-    }
-    else if(t->symbol = 'e'){ //explorer
-        char terr = world[currWorldRow][currWorldCol]->screen[t->y-1][t->x];
-        int direction = t->dir;
-        if(0){ //if hit IMPASSIBLE terrain random 
-            int randDir = rand() % 8;
-            while(randDir == t->dir)
-                randDir = rand() % 8;
-            t->dir = randDir;
+    }    
+    
+    else if(t->symbol == 'e'){ //explorer
+        int direction = t->dir;//if hit IMPASSIBLE terrain random 
+        if(direction == 0){
+            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_gate)
+                t->dir = getExplorerDirection(t);
         }
+        else if(direction == 2){
+            if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_gate)
+                t->dir = getExplorerDirection(t);
+        }
+        else if (direction == 4){
+            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_gate)
+                t->dir = getExplorerDirection(t);
+        }
+        else if (direction == 1){
+            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_gate)
+                t->dir = getExplorerDirection(t);
+        }
+        else if (direction == 3){
+        if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_gate)
+                t->dir = getExplorerDirection(t);
+        }
+        else if (direction == 5){
+            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_gate)
+                t->dir = getExplorerDirection(t);
+        }
+        else if (direction == 6){
+            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_gate)
+                t->dir = getExplorerDirection(t);
+        }
+        else if (direction == 7){
+            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_gate)
+                t->dir = getExplorerDirection(t);
+        }
+        //now move from rand direction
         moveFromDirection(t);
     }
     
-     else if(t->symbol = 'p'){ //pacers
-        char terr = world[currWorldRow][currWorldCol]->screen[t->y-1][t->x];
+    else if(t->symbol == 'p'){ //pacers
         int  direction = t->dir;
-        if(0){ //if hit terrain reverse 
+         //if hit terrain reverse 
             if(direction == 0){
-                direction = 1;
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_gate)
+                    t->dir = 1;
             }
             else if(direction == 2){
-                direction = 3;
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_gate)
+                    t->dir = 3;
             }
             else if (direction == 4){
-                direction = 5;
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_gate)
+                    t->dir = 5;
             }
             else if (direction == 1){
-                direction = 0;
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_gate)
+                    t->dir = 0;
             }
             else if (direction == 3){
-               direction = 2;
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_gate)
+                    t->dir = 2;
             }
             else if (direction == 5){
-                direction = 4;
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_gate)
+                    t->dir = 4;
             }
             else if (direction == 6){
-                direction = 7;
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_boulder|| world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_gate)
+                    t->dir = 7;
             }
             else if (direction == 7){
-                direction = 6;
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_gate)
+                    t->dir = 6;
             }
-        }
         moveFromDirection(t);
     }
+
+
 }
 
 //initialize npcs on single map
@@ -774,23 +950,101 @@ void traffic(){
     
     heap_init(&h, turn_cmp, NULL);
 
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < numTrainers; i++){
         NPC[i].hn = heap_insert(&h, &NPC[i]);
     }
+
     while ((c = heap_remove_min(&h))) {
-        moveNPCs(c);
-        if(c->symbol == '@'){
+        moveNPCs(c); 
+
+        if(c->sequence_num == 0){
             printMap();
-        }
+        } 
+
         heap_insert(&h, &NPC[c->sequence_num]);
         usleep(100000);
     }
     heap_delete(&h);
 }
 
+void spawnNPCs(int newNPC, int numT){
+    if(newNPC == 0){ //Sentry
+        character_t* sentry = malloc(sizeof(character_t));
 
-void initNPCs(int numtrainers){
-    if(numTrainers > 2){
+        sentry->symbol = 's';
+        int sentry_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        while(world[currWorldRow][currWorldCol]->screen[sentry_coord % 79][sentry_coord / 79] == ter_boulder || world[currWorldRow][currWorldCol]->screen[sentry_coord % 79][sentry_coord / 79] == ter_water || world[currWorldRow][currWorldCol]->screen[sentry_coord % 79][sentry_coord / 79] == ter_mountain){
+            sentry_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        }
+        sentry->y = sentry_coord % 79;
+        sentry->x = sentry_coord / 79;
+        sentry->sequence_num = numTrainers - numT;
+        
+
+        sentry->next_turn = INF;
+    
+        NPC[numTrainers - numT] = *sentry;
+    }
+    if(newNPC == 1){ //Wanderer
+        character_t* wanderer = malloc(sizeof(character_t));
+
+        wanderer->symbol = 'w';
+        int wanderer_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        while(world[currWorldRow][currWorldCol]->screen[wanderer_coord % 79][wanderer_coord / 79] == ter_boulder || world[currWorldRow][currWorldCol]->screen[wanderer_coord % 79][wanderer_coord / 79] == ter_forest || world[currWorldRow][currWorldCol]->screen[wanderer_coord % 79][wanderer_coord / 79] == ter_water || world[currWorldRow][currWorldCol]->screen[wanderer_coord % 79][wanderer_coord / 79] == ter_mountain){
+            wanderer_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        }
+        wanderer->y = wanderer_coord % 79;
+        wanderer->x = wanderer_coord / 79;
+        wanderer->sequence_num = numTrainers - numT;
+        wanderer->dir = rand() % 8;
+
+
+        wanderer->next_turn = pathFindCost(world[currWorldRow][currWorldCol]->screen[wanderer->y][wanderer->x], 1);
+    
+        NPC[numTrainers - numT] = *wanderer;
+    }
+    if(newNPC == 2){ //Pacer
+        character_t* pacer = malloc(sizeof(character_t));
+
+        pacer->symbol = 'p';
+        int pacer_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        while(world[currWorldRow][currWorldCol]->screen[pacer_coord % 79][pacer_coord / 79] == ter_boulder || world[currWorldRow][currWorldCol]->screen[pacer_coord % 79][pacer_coord / 79] == ter_forest || world[currWorldRow][currWorldCol]->screen[pacer_coord % 79][pacer_coord / 79] == ter_water || world[currWorldRow][currWorldCol]->screen[pacer_coord % 79][pacer_coord / 79] == ter_mountain){
+            pacer_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        }
+        pacer->y = pacer_coord % 79;
+        pacer->x = pacer_coord / 79;
+        pacer->sequence_num = numTrainers - numT;
+        pacer->dir = rand() % 8;
+
+
+        pacer->next_turn = pathFindCost(world[currWorldRow][currWorldCol]->screen[pacer->y][pacer->x], 1);
+    
+        NPC[numTrainers - numT] = *pacer;
+    }
+    if(newNPC == 3){ //Explorers
+        character_t* explorer = malloc(sizeof(character_t));
+
+        explorer->symbol = 'e';
+        int explorer_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        while(world[currWorldRow][currWorldCol]->screen[explorer_coord % 79][explorer_coord / 79] == ter_boulder || world[currWorldRow][currWorldCol]->screen[explorer_coord % 79][explorer_coord / 79] == ter_water|| world[currWorldRow][currWorldCol]->screen[explorer_coord % 79][explorer_coord / 79] == ter_forest || world[currWorldRow][currWorldCol]->screen[explorer_coord % 79][explorer_coord / 79] == ter_mountain){
+            explorer_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
+        }
+        explorer->y = explorer_coord % 79;
+        explorer->x = explorer_coord / 79;
+        explorer->sequence_num = numTrainers - numT;
+        explorer->dir = rand() % 8;
+        
+        
+
+        explorer->next_turn = pathFindCost(world[currWorldRow][currWorldCol]->screen[explorer->y][explorer->x], 1);
+    
+        NPC[numTrainers - numT] = *explorer;
+    }
+}
+
+void initNPCs(int numT){
+
+    if(numT > 2){
         character_t* rival = malloc(sizeof(character_t));
         rival->symbol = 'r';
         int rival_coord = (((rand() % 78) + 1) * 79) + ((rand() % 19) + 1);
@@ -820,16 +1074,16 @@ void initNPCs(int numtrainers){
         NPC[1] = *hiker;
         NPC[2] = *rival;
 
-        numtrainers -= 2;
+        numT -= 3; //numT = 6
     }
-    
-
-    while(numtrainers){
-        
-        numtrainers--;
+    while(numT){
+        int newNPC = rand() % 4;
+        spawnNPCs(newNPC, numT);
+        numT--;
     }
 
 }
+
 void initMap(){
     currWorldRow = 200;
     currWorldCol = 200;
@@ -840,30 +1094,16 @@ void initMap(){
 }
 
 int main(int argc, char *argv[]){
-    char c;
+    int c;
     srand(time(NULL));
 
-    initMap();
-
-    // while((c = getc(stdin)) != 'q'){
-    //     switch(c){
-    //         case 'n':
-    //             move('n');
-    //             break;
-    //         case 's':
-    //             move('s');
-    //             break;
-    //         case 'w':
-    //             move('w');
-    //             break;
-    //         case 'e':
-    //             move('e');
-    //             break;
-    //         case 'f':
-    //             move('f');
-    //             break;
-    //     }
-    // }
     
+    printf("Enter number of trainers: ");
+    scanf("%d", &c);
+    
+    if(c > 0){
+        numTrainers = c+1;
+    }
+    initMap();
     return 0;
 }
