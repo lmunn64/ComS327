@@ -5,7 +5,7 @@
 #include "queue.h"
 #include "heap.h"
 #include <unistd.h>
-// #include <curses.h>
+#include <ncurses.h>
 
 #define MAP_X 80
 #define MAP_Y 21
@@ -16,7 +16,8 @@
 
 #define NPCS numTrainers
 
-int numTrainers = 9;
+int numTrainers = 6;
+
 typedef enum terrain_type {
   ter_debug,
   ter_boulder,
@@ -99,7 +100,7 @@ const char CENTER = 'C';
 const char PLAYER = '@';
 const char MART = 'M';
 
-const int NPC_cost[3][11] = {{INF, INF, 10, 50, 50, 15, 10, 15, 15, INF, INF},{INF, INF, 10, 50, 50, 20, 10, INF, INF, INF, INF},{INF, INF, 10, 50, 50, 20, 10, 30, INF, INF, INF}};
+const int NPC_cost[4][11] = {{INF, INF, 10, 50, 50, 15, 10, 15, 15, INF, INF},{INF, INF, 10, 50, 50, 20, 10, INF, INF, INF, INF},{INF, INF, 10, 50, 50, 20, 10, 30, INF, INF, INF},{INF, INF, 10, 10, 10, 20, 10, INF, INF, INF, 10}};
 
 char *NPC_moves[] = {"n","s","w","e","nw","se","ne","sw"};
 
@@ -481,7 +482,7 @@ void placePlayer(terrain_type_t screen[21][80]){
     pc->next_turn = 10;
     NPC[0] = *pc;
     
-    screen[player % 79][player / 79] = ter_player;
+    // screen[player % 79][player / 79] = ter_player;
 }
 
 //Creates map
@@ -542,7 +543,7 @@ void printMap(){
             check = 1;
             for(int k = 0; k < numTrainers; k++){
                 if(NPC[k].y == i && NPC[k].x == j){
-                    putchar(NPC[k].symbol);
+                    mvprintw(i, j, "%c", NPC[k].symbol);
                     check = 0;
                     break;
                 }
@@ -551,41 +552,41 @@ void printMap(){
                 switch (world[currWorldRow][currWorldCol]->screen[i][j]){
                     case ter_boulder:
                     case ter_mountain:
-                        putchar('%');
+                        mvprintw(i, j, "%c", '%');
                         break;
                     case ter_tree:
                     case ter_forest:
-                        putchar('^');
+                        mvprintw(i, j, "%c", '^');
                         break;
                     case ter_path:
                     case ter_gate:
-                        putchar('#');
+                        mvprintw(i, j, "%c", '#');
                         break;
                     case ter_mart:
-                        putchar('M');
+                        mvprintw(i, j, "%c", 'M');
                         break;
                     case ter_center:
-                        putchar('C');
+                        mvprintw(i, j, "%c", 'C');
                         break;
                     case ter_grass:
-                        putchar(':');
+                        mvprintw(i, j, "%c", ':');
                         break;
                     case ter_clearing:
-                        putchar('.');
+                        mvprintw(i, j, "%c", '.');
                         break;
                     case ter_water:
-                        putchar('~');
+                        mvprintw(i, j, "%c", '~');
                         break;
                     }
                 }
             }
-        putchar('\n');
+        // mvprintw(j, i, "%c" '/n')
     }
 
-    printf("%s %dx%d\n\n\n", "You are at coordinate: ", currWorldCol-200, currWorldRow-200);
+    // printw("%s %dx%d\n\n\n", "You are at coordinate: ", currWorldCol-200, currWorldRow-200);
 }
 
-void moveFromDirection(character_t *t){
+void moveFromDirection(character_t *t, int character){
     int direction = t->dir;
     int minX = t->x;
     int minY = t->y;
@@ -616,43 +617,47 @@ void moveFromDirection(character_t *t){
     if(direction == 0 && a == 0){
             t->y = t->y-1;
             t->x = t->x;
-            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX], 2);
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX], character);
         } 
     else if (direction == 2 && b == 0){
             t->y = t->y;
             t->x = t->x-1;
-            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX-1], 2);
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX-1], character);
         }
     else if (direction == 4 && c == 0){
             t->y = t->y-1;
             t->x = t->x-1;
-            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX-1], 2);
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX-1], character);
         }
     else if (direction == 1 && d == 0){
             t->y = t->y+1;
             t->x = t->x;
-            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX], 2);
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX], character);
         }
     else if (direction == 3 && e == 0){
             t->y = t->y;
             t->x = t->x+1;
-             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX+1], 2);
+             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX+1], character);
         }
     else if (direction == 5 && f == 0){
             t->y = t->y+1;
             t->x = t->x+1;
-            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX+1], 2);
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX+1], character);
         }
     else if (direction == 6 && g == 0){
             t->y = t->y-1;
             t->x = t->x+1;
-            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX+1], 2);
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX+1], character);
         }
     else if (direction == 7 && h == 0){
             t->y = t->y+1;
             t->x = t->x-1;
-            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX-1], 2);
+            t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX-1], character);
         }
+    
+    else
+        mvprintw(21,0,"%s","cant move there");
+
 }
 
 void moveFollowers(character_t *t, int character){
@@ -732,7 +737,7 @@ void moveFollowers(character_t *t, int character){
         min = paths[character]->screen[minY+1][minX-1];
         t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX-1], character);
     }
-}\
+}
 
 int getWandererDirection(character_t *t){
     int direction = rand() % 8;
@@ -816,6 +821,45 @@ int getExplorerDirection(character_t *t){
     return direction;
 }
 
+void movePC(character_t *t){
+
+    char ch = getch();
+
+    mvprintw(21,0,"%c", ch);
+    if(ch == 'k'){
+        t->dir = 0;
+        moveFromDirection(t,3);
+    }
+    else if(ch == 'j'){
+        t->dir = 1;
+        moveFromDirection(t,3);
+    }
+    else if(ch == 'l'){
+        t->dir = 3;
+        moveFromDirection(t,3);
+    }
+    else if(ch == 'h'){
+        t->dir = 2;
+        moveFromDirection(t,3);
+    }
+    // else if(ch == 'j'){
+    //     t->dir = 1;
+    //     moveFromDirection(t,3);
+    // }
+    // else if(ch == 'j'){
+    //     t->dir = 1;
+    //     moveFromDirection(t,3);
+    // }
+    // else if(ch == 'j'){
+    //     t->dir = 1;
+    //     moveFromDirection(t,3);
+    // }
+    // else if(ch == 'j'){
+    //     t->dir = 1;
+    //     moveFromDirection(t,3);
+    // }
+}
+
 void moveNPCs(character_t *t){
     //if hiker
     if(t->symbol == 'h'){
@@ -826,7 +870,7 @@ void moveNPCs(character_t *t){
         moveFollowers(t, 1);
     }
     else if(t->symbol == '@'){
-        t->next_turn += 10;
+        movePC(t);
     }
     else if(t->symbol == 'w'){ //wanderer
         int direction = t->dir;//if hit IMPASSIBLE terrain random 
@@ -864,7 +908,7 @@ void moveNPCs(character_t *t){
                     t->dir = getWandererDirection(t);
             }
         //now move from rand direction
-        moveFromDirection(t);
+        moveFromDirection(t, 2);
     }    
     
     else if(t->symbol == 'e'){ //explorer
@@ -902,7 +946,7 @@ void moveNPCs(character_t *t){
                 t->dir = getExplorerDirection(t);
         }
         //now move from rand direction
-        moveFromDirection(t);
+        moveFromDirection(t, 2);
     }
     
     else if(t->symbol == 'p'){ //pacers
@@ -940,7 +984,7 @@ void moveNPCs(character_t *t){
                 if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_gate)
                     t->dir = 6;
             }
-        moveFromDirection(t);
+        moveFromDirection(t, 2);
     }
 
 
@@ -959,14 +1003,12 @@ void traffic(){
 
     while ((c = heap_remove_min(&h))) {
         moveNPCs(c); 
-
         if(c->sequence_num == 0){
             printMap();
+            refresh();
         } 
-
         heap_insert(&h, &NPC[c->sequence_num]);
-        usleep(100000);
-    }
+      }
     heap_delete(&h);
 }
 
@@ -1093,21 +1135,22 @@ void initMap(){
     setExits();
     createMap(currExitN,currExitS,currExitE,currExitW);
     initNPCs(numTrainers);
+    printMap();
     traffic();
 }
 
 
 int main(int argc, char *argv[]){
-    int c;
+    
     srand(time(NULL));
 
-    
-    printf("Enter number of trainers: ");
-    scanf("%d", &c);
-    
-    if(c > 0){
-        numTrainers = c+1;
-    }
+    initscr();
+    // raw();
+    keypad(stdscr, TRUE);
+
     initMap();
+
+    endwin();
+
     return 0;
 }

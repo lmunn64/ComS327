@@ -1,5 +1,5 @@
-pokemon: 
-	gcc pokemon.c queue.c heap.c -o pokemon
+poke327: 
+	gcc pokemon.c queue.c heap.c -lncurses -o pokemon
 clean:
 	rm -f *.exe pokemon
 debug: 
