@@ -5,6 +5,7 @@
 #include "queue.h"
 #include "heap.h"
 #include <unistd.h>
+// #include <curses.h>
 
 #define MAP_X 80
 #define MAP_Y 21
@@ -185,8 +186,7 @@ void martCenterHelper(terrain_type_t screen[21][80]){
     }
 }
 
-static void dijkstras_path(terrain_type_t screen[21][80], int player, int character) //0 for hiker, 1 for rival
-{
+static void dijkstras_path(terrain_type_t screen[21][80], int player, int character){ //0 for hiker, 1 for rival
   heap_t h;
   uint32_t x, y;  
   static path_t path[MAP_Y][MAP_X];
@@ -302,6 +302,8 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
   heap_delete(&h);
       return;
 }
+}
+
 
 //TODO: implement bfs or dijkstras for this instead of dummy path finding
 void roadPath(int a, int b, int c, int d, terrain_type_t screen[21][80]){    
@@ -696,7 +698,7 @@ void moveFollowers(character_t *t, int character){
         t->next_turn = t->next_turn;
         min = paths[character]->screen[minY+1][minX-1];
     }
-}\
+}
 
 void moveNPCs(character_t *t){
     //if hiker
@@ -809,11 +811,11 @@ void initNPCs(int numtrainers){
     
 
     while(numtrainers){
-        
         numtrainers--;
     }
 
 }
+
 void initMap(){
     currWorldRow = 200;
     currWorldCol = 200;
@@ -823,31 +825,9 @@ void initMap(){
     traffic();
 }
 
+
 int main(int argc, char *argv[]){
-    char c;
     srand(time(NULL));
-
     initMap();
-
-    // while((c = getc(stdin)) != 'q'){
-    //     switch(c){
-    //         case 'n':
-    //             move('n');
-    //             break;
-    //         case 's':
-    //             move('s');
-    //             break;
-    //         case 'w':
-    //             move('w');
-    //             break;
-    //         case 'e':
-    //             move('e');
-    //             break;
-    //         case 'f':
-    //             move('f');
-    //             break;
-    //     }
-    // }
-    
     return 0;
 }
