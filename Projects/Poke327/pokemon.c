@@ -538,8 +538,8 @@ void createMap(){
 //prints map to IO
 void printMap(){
     int check;
-    for(int i = 0; i < 21; i++){
-        for(int j = 0; j < 80; j++){
+    for(int i = 1; i < MAP_Y; i++){
+        for(int j = 0; j < MAP_X; j++){
             check = 1;
             for(int k = 0; k < numTrainers; k++){
                 if(NPC[k].y == i && NPC[k].x == j){
