@@ -5,7 +5,7 @@
 #include "queue.h"
 #include "heap.h"
 #include <unistd.h>
-
+#include <ncurses.h>
 #define MAP_X 80
 #define MAP_Y 21
 
@@ -189,8 +189,8 @@ void martCenterHelper(terrain_type_t screen[21][80]){
 static void dijkstras_path(terrain_type_t screen[21][80], int player, int character){ //0 for hiker, 1 for rival
   heap_t h;
   uint32_t x, y;  
-  static path_t path[MAP_Y][MAP_X];
-  path_t *p = malloc(sizeof(path_t));
+  path_t path[MAP_Y][MAP_X];
+  path_t *p;
 
   static uint32_t initialized = 0;
  
@@ -203,7 +203,9 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
     }
     initialized = 1;
   }
+
   paths[character] = malloc(sizeof(distMap));
+  
   for (y = 0; y < MAP_Y; y++) {
     for (x = 0; x < MAP_X; x++) {
         paths[character]->screen[y][x] = INF;
@@ -217,8 +219,8 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
 
   heap_init(&h, path_cmp, NULL);
   
-  for (y = 0; y < MAP_Y ; y++) {
-    for (x = 0; x < MAP_X; x++) { 
+  for (y = 1; y < MAP_Y-1 ; y++) {
+    for (x = 1; x < MAP_X-1; x++) { 
         path[y][x].hn = heap_insert(&h, &path[y][x]);
     }
   }
@@ -230,59 +232,58 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x]    ] = ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn);
+      heap_insert(&h, &path[p->pos[dim_y] - 1][p->pos[dim_x]    ]);
     }
    
     cost = pathFindCost(path[p->pos[dim_y]    ][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y]    ][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y]][p->pos[dim_x] - 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y]][p->pos[dim_x] - 1] = ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y]    ][p->pos[dim_x] - 1]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y]   ][p->pos[dim_x]  + 1].terrain, character);
     if ((path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y]    ][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y]][p->pos[dim_x] + 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y]][p->pos[dim_x] + 1] =  ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y]    ][p->pos[dim_x] + 1]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x]    ].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x]    ] = ((p->cost + cost)); 
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn);
+      heap_insert(&h, &path[p->pos[dim_y] + 1][p->pos[dim_x]    ]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x] - 1] = ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y] - 1][p->pos[dim_x] - 1]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x] + 1] = ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y] + 1][p->pos[dim_x] + 1]);
     }
     cost = pathFindCost(path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].terrain, character);
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x] + 1] =  ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y] - 1][p->pos[dim_x] + 1]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x] - 1] = ((p->cost + cost)); 
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y] + 1][p->pos[dim_x] - 1]);
     }
   }
-  
-  free(p);
+
   heap_delete(&h);
   return;
 }
