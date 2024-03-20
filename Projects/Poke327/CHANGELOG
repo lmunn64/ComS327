@@ -1,3 +1,58 @@
+commit fffd038124fb96107d6876aa8b95fe4ab2792dd2
+Author: unknown <lmunn64@gmail.com>
+Date:   Thu Feb 29 01:56:28 2024 -0600
+
+    Finished 1.04
+
+commit 73d9cd3fdfedfae4fcf59b9a43f25aa057a592af
+Author: unknown <lmunn64@gmail.com>
+Date:   Wed Feb 28 21:23:17 2024 -0600
+
+    working collison for moving NPCS, working heap, and screen
+
+commit 4608a7aa7192ab5196733a9ff1f57c26adb7adcf
+Merge: 53e1e00 841a353
+Author: unknown <lmunn64@iastate.edu>
+Date:   Wed Feb 28 15:29:00 2024 -0600
+
+    merge
+
+commit 53e1e00e56656bf2d144f161d13247f762ceb53f
+Author: unknown <lmunn64@iastate.edu>
+Date:   Wed Feb 28 15:25:45 2024 -0600
+
+    segmentation fault fixed, started heap initialization for pc and follower NPCs
+
+commit db207a7c8b7269f3d4118e46b54791c69db790b8
+Author: unknown <lmunn64@iastate.edu>
+Date:   Wed Feb 28 12:25:52 2024 -0600
+
+    Seg fault occuring still
+
+commit 841a353585e58df2bd27426378aa6576e137f360
+Author: unknown <lmunn64@gmail.com>
+Date:   Tue Feb 27 23:50:52 2024 -0600
+
+    seg error still happening. need to account for cost in npc queue, and fill out boundary stuff
+
+commit c4ac735fae93f1c513ee4a80e5e22695843c2fc9
+Author: unknown <lmunn64@iastate.edu>
+Date:   Tue Feb 27 20:47:32 2024 -0600
+
+    seg fault on djikstras
+
+commit 4b41ee34b541ca4909bb2ffe5162aa2fc3f85003
+Author: unknown <lmunn64@gmail.com>
+Date:   Tue Feb 27 18:14:30 2024 -0600
+
+    started 1.04, map placing npc char and terrain char, fix
+
+commit 46aae11c2b2f2e46e70ca0245af061265758026b
+Author: unknown <lmunn64@iastate.edu>
+Date:   Tue Feb 20 18:55:50 2024 -0600
+
+    Updated CHANGELOG
+
 commit c68a21fbfe345e7f2e81d174e0f878a84eaf570f
 Author: unknown <lmunn64@iastate.edu>
 Date:   Tue Feb 20 18:50:57 2024 -0600
@@ -94,4 +149,3 @@ Author: unknown <lmunn64@iastate.edu>
 Date:   Tue Jan 30 09:34:28 2024 -0600
 
     Initialized pokemon 1.01 with random seed placed for 3 terrains
-

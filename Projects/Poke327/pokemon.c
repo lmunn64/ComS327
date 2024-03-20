@@ -5,6 +5,8 @@
 #include "queue.h"
 #include "heap.h"
 #include <unistd.h>
+#include <string.h>
+#include <menu.h>
 #include <ncurses.h>
 
 #define MAP_X 80
@@ -15,6 +17,12 @@
 #define INF 9999
 
 #define NPCS numTrainers
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
+#define CTRLD 	4
+
+char* topper = "------Welcome trainers, to Pokemon for C!------";
 
 int numTrainers = 6;
 
@@ -43,6 +51,7 @@ typedef struct heapNode{
     int totalDist;
     int id;
 } heapNode;
+
 //Individual map structure
 typedef struct Map {
     terrain_type_t screen[21][80];
@@ -70,6 +79,7 @@ typedef enum dim {
   num_dims
 } dim_t;
 
+char *trainers[6];
 
 typedef struct character {
   heap_node_t *hn;
@@ -121,6 +131,8 @@ static int32_t turn_cmp(const void *key, const void *with) {
 map *world[401][401];
 
 distMap *paths[2];
+
+void moveNPCs(character_t *t); 
 
 int pathFindCost(terrain_type_t t, int i){
     switch(t){
@@ -188,24 +200,22 @@ void martCenterHelper(terrain_type_t screen[21][80]){
     }
 }
 
-static void dijkstras_path(terrain_type_t screen[21][80], int player, int character){ //0 for hiker, 1 for rival
+static void dijkstras_path(terrain_type_t screen[21][80], int character){ //0 for hiker, 1 for rival
   heap_t h;
   uint32_t x, y;  
-  static path_t path[MAP_Y][MAP_X];
-  path_t *p = malloc(sizeof(path_t));
+  path_t path[MAP_Y][MAP_X];
+  path_t *p;
 
-  static uint32_t initialized = 0;
- 
-  if (!initialized) {
     for (y = 0; y < MAP_Y; y++) {
-      for (x = 0; x < MAP_X; x++) {
+        for (x = 0; x < MAP_X; x++) {
         path[y][x].pos[dim_y] = y;
         path[y][x].pos[dim_x] = x;
-      }
+        }
     }
-    initialized = 1;
-  }
+
+
   paths[character] = malloc(sizeof(distMap));
+  
   for (y = 0; y < MAP_Y; y++) {
     for (x = 0; x < MAP_X; x++) {
         paths[character]->screen[y][x] = INF;
@@ -232,63 +242,61 @@ static void dijkstras_path(terrain_type_t screen[21][80], int player, int charac
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x]    ] = ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn);
+      heap_insert(&h, &path[p->pos[dim_y] - 1][p->pos[dim_x]    ]);
     }
    
     cost = pathFindCost(path[p->pos[dim_y]    ][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y]    ][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y]][p->pos[dim_x] - 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y]][p->pos[dim_x] - 1] = ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y]    ][p->pos[dim_x] - 1]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y]   ][p->pos[dim_x]  + 1].terrain, character);
     if ((path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y]    ][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y]][p->pos[dim_x] + 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y]][p->pos[dim_x] + 1] =  ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y]    ][p->pos[dim_x] + 1]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x]    ].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x]    ] = ((p->cost + cost)); 
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn);
+      heap_insert(&h, &path[p->pos[dim_y] + 1][p->pos[dim_x]    ]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x] - 1] = ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x] - 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y] - 1][p->pos[dim_x] - 1]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x] + 1] = ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x] + 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y] + 1][p->pos[dim_x] + 1]);
     }
     cost = pathFindCost(path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].terrain, character);
     if ((path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].hn) && (path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] - 1][p->pos[dim_x] + 1] =  ((p->cost + cost));
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1][p->pos[dim_x] + 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y] - 1][p->pos[dim_x] + 1]);
     }
 
     cost = pathFindCost(path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].terrain, character);
     if ((path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].hn) && (path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].cost > ((p->cost + cost)))) {
       path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].cost = ((p->cost + cost));
       paths[character]->screen[p->pos[dim_y] + 1][p->pos[dim_x] - 1] = ((p->cost + cost)); 
-      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1][p->pos[dim_x] - 1].hn);
+      heap_insert(&h, &path[p->pos[dim_y] + 1][p->pos[dim_x] - 1]);
     }
   }
-  
-  free(p);
+
   heap_delete(&h);
   return;
 }
-
 
 
 //TODO: implement bfs or dijkstras for this instead of dummy path finding
@@ -481,8 +489,6 @@ void placePlayer(terrain_type_t screen[21][80]){
     pc->sequence_num = 0;
     pc->next_turn = 10;
     NPC[0] = *pc;
-    
-    // screen[player % 79][player / 79] = ter_player;
 }
 
 //Creates map
@@ -530,26 +536,34 @@ void createMap(){
     }
     placePlayer(world[currWorldRow][currWorldCol]->screen);
 
-    dijkstras_path(world[currWorldRow][currWorldCol]->screen, player, 0);
-    dijkstras_path(world[currWorldRow][currWorldCol]->screen, player, 1);
+    dijkstras_path(world[currWorldRow][currWorldCol]->screen, 0);
+    dijkstras_path(world[currWorldRow][currWorldCol]->screen, 1);
 
 }
 
+void displayWarning(char* message){
+     mvprintw(0, (MAP_X - strlen(message)) / 2, "%s", message);
+     refresh();
+     usleep(1500000);
+     mvprintw(0, (MAP_X - strlen(topper)) / 2, "%s", topper);
+     refresh();
+}
 //prints map to IO
 void printMap(){
     int check;
-    for(int i = 1; i < MAP_Y; i++){
+    mvprintw(0, (MAP_X - strlen(topper)) / 2, "%s", topper);
+    for(int i = 1; i < MAP_Y+1; i++){
         for(int j = 0; j < MAP_X; j++){
             check = 1;
             for(int k = 0; k < numTrainers; k++){
-                if(NPC[k].y == i && NPC[k].x == j){
+                if(NPC[k].y == i-1 && NPC[k].x == j){
                     mvprintw(i, j, "%c", NPC[k].symbol);
                     check = 0;
                     break;
                 }
             }
             if(check == 1){
-                switch (world[currWorldRow][currWorldCol]->screen[i][j]){
+                switch (world[currWorldRow][currWorldCol]->screen[i-1][j]){
                     case ter_boulder:
                     case ter_mountain:
                         mvprintw(i, j, "%c", '%');
@@ -586,77 +600,177 @@ void printMap(){
     // printw("%s %dx%d\n\n\n", "You are at coordinate: ", currWorldCol-200, currWorldRow-200);
 }
 
+void print_in_middle(WINDOW *win, int starty, int startx, int width, char *string, chtype color)
+{	int length, x, y;
+	float temp;
+
+	if(win == NULL)
+		win = stdscr;
+	getyx(win, y, x);
+	if(startx != 0)
+		x = startx;
+	if(starty != 0)
+		y = starty;
+	if(width == 0)
+		width = 80;
+
+	length = strlen(string);
+	temp = (width - length)/ 2;
+	x = startx + (int)temp;
+	wattron(win, color);
+	mvwprintw(win, y, x, "%s", string);
+	wattroff(win, color);
+	refresh();
+}
+
+void fillTrainerArray(){
+    int i;
+    for(i = 0; i < numTrainers; i++){
+        if(NPC[i + 1].symbol == 'r')
+            trainers[i] = "Rival";
+        if(NPC[i + 1].symbol == 'h')
+            trainers[i] = "Hiker";
+        if(NPC[i + 1].symbol == 's')
+            trainers[i] = "Sentry";
+        if(NPC[i + 1].symbol == 'e')
+            trainers[i] = "Explorer";
+        if(NPC[i + 1].symbol == 'p')
+            trainers[i] = "Pacer";
+        if(NPC[i + 1].symbol == 'w')
+            trainers[i] = "Wanderer";
+    }
+    trainers[numTrainers] = (char *)NULL;
+}
+void displayTrainerMenu(){
+    ITEM **my_items;
+	int c;				
+	MENU *my_menu;
+    WINDOW *my_menu_win;
+    int n_choices, i;
+    fillTrainerArray();
+	/* Create items */
+    n_choices = ARRAY_SIZE(trainers);
+
+    char buffer[n_choices][50];
+
+    my_items = (ITEM **)calloc(n_choices, sizeof(ITEM *));
+    for(i = 0; i < n_choices; ++i){
+        int x = NPC[i+1].x - NPC[0].x;
+        int y = NPC[i+1].y - NPC[0].y;
+        if(NPC[i+1].y < NPC[0].y){
+            if((NPC[i+1].x < NPC[0].x))
+                sprintf(buffer[i], "%d north and %d west", abs(y), abs(x));
+            else
+                sprintf(buffer[i], "%d north and %d east", abs(y), abs(x));
+        }
+        else {
+            if((NPC[i+1].x < NPC[0].x))
+                sprintf(buffer[i], "%d south and %d west", abs(y), abs(x));
+            else
+                sprintf(buffer[i], "%d south and %d east", abs(y), abs(x));
+        }        
+        my_items[i] = new_item(trainers[i], buffer[i]);
+    }
+
+	/* Create menu */
+	my_menu = new_menu((ITEM **)my_items);
+    int winWidth = 40;
+    int winLen = 10;
+	/* Create the window to be associated with the menu */
+    my_menu_win = newwin(10, 40, (MAP_Y - winLen) / 2, (MAP_X - winWidth) / 2);
+    keypad(my_menu_win, TRUE);
+     
+	/* Set main window and sub window */
+    set_menu_win(my_menu, my_menu_win);
+    set_menu_sub(my_menu, derwin(my_menu_win, 6, 38, 3, 1));
+	set_menu_format(my_menu, 5, 1);
+			
+	/* Set menu mark to the string " * " */
+        set_menu_mark(my_menu, " * ");
+
+	/* Print a border around the main window and print a title */
+    box(my_menu_win, 0, 0);
+	print_in_middle(my_menu_win, 1, 0, 40, "Trainer List", COLOR_PAIR(1));
+	mvwaddch(my_menu_win, 2, 0, ACS_LTEE);
+	mvwhline(my_menu_win, 2, 1, ACS_HLINE, 38);
+	mvwaddch(my_menu_win, 2, 39, ACS_RTEE);
+        
+	/* Post the menu */
+	post_menu(my_menu);
+	wrefresh(my_menu_win);
+	
+	refresh();
+
+	while((c = wgetch(my_menu_win)) != 27)
+	{       switch(c)
+	        {	case KEY_DOWN:
+				menu_driver(my_menu, REQ_DOWN_ITEM);
+				break;
+			case KEY_UP:
+				menu_driver(my_menu, REQ_UP_ITEM);
+				break;
+			case KEY_NPAGE:
+				menu_driver(my_menu, REQ_SCR_DPAGE);
+				break;
+			case KEY_PPAGE:
+				menu_driver(my_menu, REQ_SCR_UPAGE);
+				break;
+		}
+                wrefresh(my_menu_win);
+	}
+    /* Unpost and free all the memory taken up */
+    unpost_menu(my_menu);
+    free_menu(my_menu);
+    for(i = 0; i < n_choices; ++i)
+        free_item(my_items[i]);
+}
 void moveFromDirection(character_t *t, int character){
     int direction = t->dir;
     int minX = t->x;
     int minY = t->y;
 
-    int a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0;
-    for(int i = 0; i < numTrainers; i++){
-        if(NPC[i].sequence_num != t->sequence_num){
-            character_t neighbor = NPC[i];
-            int neighborCoord = neighbor.x * 79 + neighbor.y;
-            if(minX == neighbor.x && minY - 1 == neighbor.y)
-                a = 1;
-            if(minX-1 == neighbor.x && minY == neighbor.y)
-                b = 1;
-            if(minX-1 == neighbor.x && minY - 1 == neighbor.y)
-                c = 1;
-            if(minX == neighbor.x && minY + 1 == neighbor.y)
-                d = 1;
-            if(minX+1 == neighbor.x &&  minY == neighbor.y)
-                e = 1;                        
-            if(minX+1 == neighbor.x && minY + 1 == neighbor.y)
-                f = 1;                
-            if(minX+1 == neighbor.x && minY - 1 == neighbor.y)
-                g = 1;                
-            if(minX-1 == neighbor.x && minY + 1 == neighbor.y)
-                h = 1;                
-        }
-    }
-    if(direction == 0 && a == 0){
+    if(direction == 0){
             t->y = t->y-1;
             t->x = t->x;
             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX], character);
         } 
-    else if (direction == 2 && b == 0){
+    else if (direction == 2){
             t->y = t->y;
             t->x = t->x-1;
             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX-1], character);
         }
-    else if (direction == 4 && c == 0){
+    else if (direction == 4 ){
             t->y = t->y-1;
             t->x = t->x-1;
             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX-1], character);
         }
-    else if (direction == 1 && d == 0){
+    else if (direction == 1 ){
             t->y = t->y+1;
             t->x = t->x;
             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX], character);
         }
-    else if (direction == 3 && e == 0){
+    else if (direction == 3){
             t->y = t->y;
             t->x = t->x+1;
              t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX+1], character);
         }
-    else if (direction == 5 && f == 0){
+    else if (direction == 5){
             t->y = t->y+1;
             t->x = t->x+1;
             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX+1], character);
         }
-    else if (direction == 6 && g == 0){
+    else if (direction == 6){
             t->y = t->y-1;
             t->x = t->x+1;
             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX+1], character);
         }
-    else if (direction == 7 && h == 0){
+    else if (direction == 7){
             t->y = t->y+1;
             t->x = t->x-1;
             t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX-1], character);
         }
-    
-    else
-        mvprintw(21,0,"%s","cant move there");
+    else if (t->symbol != '@')
+        mvprintw(22,0,"%s","cant move there");
 
 }
 
@@ -821,43 +935,87 @@ int getExplorerDirection(character_t *t){
     return direction;
 }
 
-void movePC(character_t *t){
-
-    char ch = getch();
-
-    mvprintw(21,0,"%c", ch);
+void movePC(character_t *t, char ch){
+    int minX = t->x;
+    int minY = t->y;
+    int a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0;
+    
+    for(int i = 0; i < numTrainers; i++){
+        if(NPC[i].sequence_num != t->sequence_num){
+            character_t neighbor = NPC[i];
+            int neighborCoord = neighbor.x * 79 + neighbor.y;
+            if(minX == neighbor.x && minY - 1 == neighbor.y)
+                a = 1;
+            if(minX-1 == neighbor.x && minY == neighbor.y)
+                b = 1;
+            if(minX-1 == neighbor.x && minY - 1 == neighbor.y)
+                c = 1;
+            if(minX == neighbor.x && minY + 1 == neighbor.y)
+                d = 1;
+            if(minX+1 == neighbor.x &&  minY == neighbor.y)
+                e = 1;                        
+            if(minX+1 == neighbor.x && minY + 1 == neighbor.y)
+                f = 1;                
+            if(minX+1 == neighbor.x && minY - 1 == neighbor.y)
+                g = 1;                
+            if(minX-1 == neighbor.x && minY + 1 == neighbor.y)
+                h = 1;                
+        }
+    }
     if(ch == 'k'){
         t->dir = 0;
-        moveFromDirection(t,3);
+        if(pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX], 3) != INF && a == 0)
+            moveFromDirection(t,3);
     }
     else if(ch == 'j'){
         t->dir = 1;
-        moveFromDirection(t,3);
+        if(pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX], 3) != INF && d == 0)
+            moveFromDirection(t,3);
     }
     else if(ch == 'l'){
         t->dir = 3;
-        moveFromDirection(t,3);
+        if(pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX+1], 3) != INF && e == 0)
+            moveFromDirection(t,3);
     }
     else if(ch == 'h'){
         t->dir = 2;
-        moveFromDirection(t,3);
+        if(pathFindCost(world[currWorldRow][currWorldCol]->screen[minY][minX-1], 3) != INF && b == 0)
+            moveFromDirection(t,3);
     }
-    // else if(ch == 'j'){
-    //     t->dir = 1;
-    //     moveFromDirection(t,3);
-    // }
-    // else if(ch == 'j'){
-    //     t->dir = 1;
-    //     moveFromDirection(t,3);
-    // }
-    // else if(ch == 'j'){
-    //     t->dir = 1;
-    //     moveFromDirection(t,3);
-    // }
-    // else if(ch == 'j'){
-    //     t->dir = 1;
-    //     moveFromDirection(t,3);
-    // }
+    else if(ch == 'y'){
+        t->dir = 4;
+        if(pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX-1], 3) != INF && c == 0)
+            moveFromDirection(t,3);
+    }
+    else if(ch == 'n'){
+        t->dir = 5;
+        if(pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX+1], 3) != INF && f == 0)
+            moveFromDirection(t,3);
+    }
+    else if(ch == 'u'){
+        t->dir = 6;
+        if(pathFindCost(world[currWorldRow][currWorldCol]->screen[minY-1][minX+1], 3) != INF && g == 0)
+            moveFromDirection(t,3);
+    }
+    else if(ch == 'b'){
+        t->dir = 7;
+        if(pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX-1], 3) != INF && h == 0)
+            moveFromDirection(t,3);
+    }
+    else if(ch == 't'){
+        displayTrainerMenu();
+    }   
+    else{
+        displayWarning("Incorrect Key! Check manual for inputs.");
+    }
+
+    if(minX != t->x || minY != t->y){
+        player = (((t->x % 78) + 1) * 79) + ((t->y % 19) + 1);
+        free(paths[0]);
+        free(paths[1]);
+        dijkstras_path(world[currWorldRow][currWorldCol]->screen, 0);
+        dijkstras_path(world[currWorldRow][currWorldCol]->screen, 1);
+    }
 }
 
 void moveNPCs(character_t *t){
@@ -869,132 +1027,157 @@ void moveNPCs(character_t *t){
     else if(t->symbol == 'r'){
         moveFollowers(t, 1);
     }
-    else if(t->symbol == '@'){
-        movePC(t);
-    }
-    else if(t->symbol == 'w'){ //wanderer
-        int direction = t->dir;//if hit IMPASSIBLE terrain random 
-         //if hit terrain reverse 
-            if(direction == 0){
+    else{
+        //if hit other npc, reverse 
+        int minX = t->x;
+        int minY = t->y;
+        int a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0;
+
+        for(int i = 0; i < numTrainers; i++){
+            if(NPC[i].sequence_num != t->sequence_num){
+                character_t neighbor = NPC[i];
+                int neighborCoord = neighbor.x * 79 + neighbor.y;
+                if(minX == neighbor.x && minY - 1 == neighbor.y)
+                    a = 1;
+                if(minX-1 == neighbor.x && minY == neighbor.y)
+                    b = 1;
+                if(minX-1 == neighbor.x && minY - 1 == neighbor.y)
+                    c = 1;
+                if(minX == neighbor.x && minY + 1 == neighbor.y)
+                    d = 1;
+                if(minX+1 == neighbor.x &&  minY == neighbor.y)
+                    e = 1;                        
+                if(minX+1 == neighbor.x && minY + 1 == neighbor.y)
+                    f = 1;                
+                if(minX+1 == neighbor.x && minY - 1 == neighbor.y)
+                    g = 1;                
+                if(minX-1 == neighbor.x && minY + 1 == neighbor.y)
+                    h = 1;                
+            }
+        }
+
+        if(t->symbol == 'w'){ //wanderer
+            int direction = t->dir; //if hit IMPASSIBLE terrain random 
+            if(direction == 0 && a == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
                     t->dir = getWandererDirection(t);
             }
-            else if(direction == 2){
+            else if(direction == 2 && b == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 4){
+            else if (direction == 4 && c == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 1){
+            else if (direction == 1 && d == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 3){
+            else if (direction == 3 && e == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 5){
+            else if (direction == 5 && f == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
-                   t->dir = getWandererDirection(t);
+                    t->dir = getWandererDirection(t);
             }
-            else if (direction == 6){
+            else if (direction == 6 && g == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 7){
+            else if (direction == 7 && h == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
                     t->dir = getWandererDirection(t);
             }
-        //now move from rand direction
-        moveFromDirection(t, 2);
-    }    
+            //now move from rand direction
+            moveFromDirection(t, 2);
+        }    
     
     else if(t->symbol == 'e'){ //explorer
         int direction = t->dir;//if hit IMPASSIBLE terrain random 
-        if(direction == 0){
+        if(direction == 0 && a == 0){
             if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_gate)
                 t->dir = getExplorerDirection(t);
         }
-        else if(direction == 2){
+        else if(direction == 2 && b == 0){
             if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_gate)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 4){
+        else if (direction == 4 && c == 0){
             if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_gate)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 1){
+        else if (direction == 1 && d == 0){
             if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_gate)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 3){
+        else if (direction == 3 && e == 0){
         if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_gate)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 5){
+        else if (direction == 5 && f == 0){
             if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_gate)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 6){
+        else if (direction == 6 && g == 0){
             if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_gate)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 7){
+        else if (direction == 7 && h == 0){
             if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_gate)
                 t->dir = getExplorerDirection(t);
         }
         //now move from rand direction
         moveFromDirection(t, 2);
     }
-    
     else if(t->symbol == 'p'){ //pacers
         int  direction = t->dir;
          //if hit terrain reverse 
-            if(direction == 0){
+            if(direction == 0 && a == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_gate)
                     t->dir = 1;
             }
-            else if(direction == 2){
+            else if(direction == 2 && b == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_gate)
                     t->dir = 3;
             }
-            else if (direction == 4){
+            else if (direction == 4 && c == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_gate)
                     t->dir = 5;
             }
-            else if (direction == 1){
+            else if (direction == 1 && d == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_gate)
                     t->dir = 0;
             }
-            else if (direction == 3){
+            else if (direction == 3 && e == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_gate)
                     t->dir = 2;
             }
-            else if (direction == 5){
+            else if (direction == 5 && f == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_gate)
                     t->dir = 4;
             }
-            else if (direction == 6){
+            else if (direction == 6 && g == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_boulder|| world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_gate)
                     t->dir = 7;
             }
-            else if (direction == 7){
+            else if (direction == 7 && h == 0){
                 if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_gate)
                     t->dir = 6;
             }
+
         moveFromDirection(t, 2);
     }
 
-
+    }
 }
 
 //initialize npcs on single map
 void traffic(){
     static character_t *c;
     heap_t h;
-    
+    char ch;
     heap_init(&h, turn_cmp, NULL);
 
     for(int i = 0; i < numTrainers; i++){
@@ -1002,7 +1185,14 @@ void traffic(){
     }
 
     while ((c = heap_remove_min(&h))) {
-        moveNPCs(c); 
+        if(c->symbol == '@'){
+            if((ch = getch()) != 'q')
+                movePC(c, ch);
+            else
+                break;
+        }
+        if(ch != 'q')
+            moveNPCs(c); 
         if(c->sequence_num == 0){
             printMap();
             refresh();
@@ -1116,6 +1306,7 @@ void initNPCs(int numT){
         hiker->sequence_num = 1;
         hiker->next_turn = pathFindCost(world[currWorldRow][currWorldCol]->screen[hiker->y][hiker->x], 0);
 
+
         NPC[1] = *hiker;
         NPC[2] = *rival;
 
@@ -1146,6 +1337,7 @@ int main(int argc, char *argv[]){
 
     initscr();
     // raw();
+    noecho();
     keypad(stdscr, TRUE);
 
     initMap();
