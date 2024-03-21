@@ -111,7 +111,7 @@ const char CENTER = 'C';
 const char PLAYER = '@';
 const char MART = 'M';
 
-const int NPC_cost[4][11] = {{INF, INF, 10, 50, 50, 15, 10, 15, 15, INF, INF},{INF, INF, 10, 50, 50, 20, 10, INF, INF, INF, INF},{INF, INF, 10, 50, 50, 20, 10, 30, INF, INF, INF},{INF, INF, 10, 10, 10, 20, 10, INF, INF, INF, 10}};
+const int NPC_cost[4][11] = {{INF, INF, 10, 50, 50, 15, 10, 15, 15, INF, INF},{INF, INF, 10, 50, 50, 20, 10, INF, INF, INF, INF},{INF, INF, 10, 50, 50, 20, 10, 30, INF, INF, INF},{INF, INF, 10, 10, 10, 20, 10, INF, INF, INF, INF}};
 
 char *NPC_moves[] = {"n","s","w","e","nw","se","ne","sw"};
 
@@ -1212,56 +1212,56 @@ void moveNPCs(character_t *t){
                 character_t neighbor = NPC[i];
                 int neighborCoord = neighbor.x * 79 + neighbor.y;
                 if(minX == neighbor.x && minY - 1 == neighbor.y){
-                    if(neighbor.symbol = '@' && t->dir == 0 && NPC[t->sequence_num].defeated == 0){
+                    if(neighbor.symbol == '@' && t->dir == 0 && NPC[t->sequence_num].defeated == 0){
                         NPC[t->sequence_num].defeated = 1;
                         displayBattle();
                     }
                     a = 1;
                 }   
                 else if(minX-1 == neighbor.x && minY == neighbor.y){
-                    if(neighbor.symbol = '@' && t->dir == 2 && NPC[t->sequence_num].defeated == 0){
+                    if(neighbor.symbol == '@' && t->dir == 2 && NPC[t->sequence_num].defeated == 0){
                         NPC[t->sequence_num].defeated = 1;
                         displayBattle();
                     }
                     b = 1;
                 }
                 else if(minX-1 == neighbor.x && minY - 1 == neighbor.y){
-                    if(neighbor.symbol = '@' && t->dir == 4 && NPC[t->sequence_num].defeated == 0){
+                    if(neighbor.symbol == '@' && t->dir == 4 && NPC[t->sequence_num].defeated == 0){
                         NPC[t->sequence_num].defeated = 1;
                         displayBattle();
                     }
                     c = 1;
                     }
                 else if(minX == neighbor.x && minY + 1 == neighbor.y){
-                    if(neighbor.symbol = '@' && t->dir == 1 && NPC[t->sequence_num].defeated == 0){
+                    if(neighbor.symbol == '@' && t->dir == 1 && NPC[t->sequence_num].defeated == 0){
                         NPC[t->sequence_num].defeated = 1;
                         displayBattle();
                     }
                     d = 1;
                 }
                 else if(minX+1 == neighbor.x &&  minY == neighbor.y){
-                    if(neighbor.symbol = '@' && t->dir == 3 && NPC[t->sequence_num].defeated == 0){
+                    if(neighbor.symbol == '@' && t->dir == 3 && NPC[t->sequence_num].defeated == 0){
                         NPC[t->sequence_num].defeated = 1;
                         displayBattle();
                     } 
                     e = 1;                        
                 }
                 else if(minX+1 == neighbor.x && minY + 1 == neighbor.y){
-                    if(neighbor.symbol = '@' && t->dir == 5 && NPC[t->sequence_num].defeated == 0){
+                    if(neighbor.symbol == '@' && t->dir == 5 && NPC[t->sequence_num].defeated == 0){
                         NPC[t->sequence_num].defeated = 1;
                         displayBattle();
                     } 
                     f = 1;                
                 }
                 else if(minX+1 == neighbor.x && minY - 1 == neighbor.y){
-                    if(neighbor.symbol = '@' && t->dir == 6 && NPC[t->sequence_num].defeated == 0){
+                    if(neighbor.symbol == '@' && t->dir == 6 && NPC[t->sequence_num].defeated == 0){
                         NPC[t->sequence_num].defeated = 1;
                         displayBattle();
                     } 
                     g = 1;                
                 }
                 else if(minX-1 == neighbor.x && minY + 1 == neighbor.y){
-                    if(neighbor.symbol = '@' && t->dir == 7 && NPC[t->sequence_num].defeated == 0){
+                    if(neighbor.symbol == '@' && t->dir == 7 && NPC[t->sequence_num].defeated == 0){
                         NPC[t->sequence_num].defeated = 1;
                         displayBattle();
                     } 
@@ -1272,36 +1272,36 @@ void moveNPCs(character_t *t){
 
         if(t->symbol == 'w'){ //wanderer
             int direction = t->dir; //if hit IMPASSIBLE terrain random 
-            if(direction == 0 && a == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+            if(direction == 0 || a == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] != world[currWorldRow][currWorldCol]->screen[t->y][t->x] || a == 1)
                     t->dir = getWandererDirection(t);
             }
-            else if(direction == 2 && b == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+            else if(direction == 2 || b == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x] || b == 1)
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 4 && c == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+            else if (direction == 4 || c == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x] || c == 1)
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 1 && d == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+            else if (direction == 1 || d == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] != world[currWorldRow][currWorldCol]->screen[t->y][t->x] || d == 1)
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 3 && e == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+            else if (direction == 3 || e == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x] || e == 1)
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 5 && f == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+            else if (direction == 5 || f == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x] || f == 1)
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 6 && g == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+            else if (direction == 6 || g == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x] || g == 1)
                     t->dir = getWandererDirection(t);
             }
-            else if (direction == 7 && h == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x])
+            else if (direction == 7 || h == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] != world[currWorldRow][currWorldCol]->screen[t->y][t->x] || h == 1)
                     t->dir = getWandererDirection(t);
             }
             //now move from rand direction
@@ -1310,73 +1310,72 @@ void moveNPCs(character_t *t){
         else if(t->symbol == 'p'){ //pacers
             int  direction = t->dir;
             //if hit terrain reverse 
-            if(direction == 0 && a == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_gate)
+            if(direction == 0 || a == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_gate || a == 1)
                     t->dir = 1;
             }
-            else if(direction == 2 && b == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_gate)
+            else if(direction == 2 || b == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_gate || b == 1)
                     t->dir = 3;
             }
-            else if (direction == 4 && c == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_gate)
+            else if (direction == 4 || c == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_gate || c == 1)
                     t->dir = 5;
             }
-            else if (direction == 1 && d == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_gate)
+            else if (direction == 1 || d == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_gate || d == 1)
                     t->dir = 0;
             }
-            else if (direction == 3 && e == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_gate)
+            else if (direction == 3 || e == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_gate|| e == 1)
                     t->dir = 2;
             }
-            else if (direction == 5 && f == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_gate)
+            else if (direction == 5 || f == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_gate || f == 1)
                     t->dir = 4;
             }
-            else if (direction == 6 && g == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_boulder|| world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_gate)
+            else if (direction == 6 || g == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_boulder|| world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_gate || g == 1)
                     t->dir = 7;
             }
-            else if (direction == 7 && h == 0){
-                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_gate)
+            else if (direction == 7 || h == 1){
+                if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_mountain || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_gate || h == 1)
                     t->dir = 6;
             }
-
-        moveFromDirection(t, 2);
+            moveFromDirection(t, 2);
     }
     else { //explorer or defeated hiker or rival
         int direction = t->dir;//if hit IMPASSIBLE terrain random 
-        if(direction == 0 && a == 0){
-            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_gate)
+        if(direction == 0 || a == 1){
+            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x] == ter_gate || a == 1)
                 t->dir = getExplorerDirection(t);
         }
-        else if(direction == 2 && b == 0){
-            if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_gate)
+        else if(direction == 2 || b == 1){
+            if(world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x-1] == ter_gate || b == 1)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 4 && c == 0){
-            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_gate)
+        else if (direction == 4 || c == 1){
+            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x-1] == ter_gate || c == 1)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 1 && d == 0){
-            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_gate)
+        else if (direction == 1 || d == 1){
+            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x] == ter_gate || d == 1)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 3 && e == 0){
-        if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_gate)
+        else if (direction == 3 || e == 1){
+        if(world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y][t->x+1] == ter_gate || e == 1)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 5 && f == 0){
-            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_gate)
+        else if (direction == 5 || f == 1){
+            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x+1] == ter_gate || f == 1)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 6 && g == 0){
-            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_gate)
+        else if (direction == 6 || g == 1){
+            if(world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y-1][t->x+1] == ter_gate || g == 1)
                 t->dir = getExplorerDirection(t);
         }
-        else if (direction == 7 && h == 0){
-            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_gate)
+        else if (direction == 7 || h == 1){
+            if(world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_water || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_boulder || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_forest || world[currWorldRow][currWorldCol]->screen[t->y+1][t->x-1] == ter_gate || h == 1)
                 t->dir = getExplorerDirection(t);
         }
         //now move from rand direction
@@ -1461,7 +1460,7 @@ void spawnNPCs(int newNPC, int numT){
         pacer->y = pacer_coord % 79;
         pacer->x = pacer_coord / 79;
         pacer->sequence_num = numTrainers - numT;
-        pacer->dir = rand() % 8;
+        pacer->dir = 6;
         pacer->defeated = 0;
 
 
