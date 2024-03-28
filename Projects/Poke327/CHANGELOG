@@ -1,3 +1,37 @@
+commit 89b7ef53647fb80c951c54f85b7314033e0cdfc2
+Author: unknown <lmunn64@gmail.com>
+Date:   Wed Mar 20 23:30:34 2024 -0500
+
+    Fully functional 1.05 assignment. Check README!
+
+commit 1bc30678ec3bb41c7a28390b12948959d256113d
+Author: unknown <lmunn64@iastate.edu>
+Date:   Wed Mar 20 16:47:44 2024 -0500
+
+    nearly complete 1.05, fix collisions for explorers and other npcs
+
+
+commit a9f8d1bd687932248cb9358971876a94a96a69c4
+Author: unknown <lmunn64@gmail.com>
+Date:   Wed Mar 20 01:04:39 2024 -0500
+
+    curses color demo
+
+commit 5a7ed2e9c2a12d28562a5a94d9e91ac021a19720
+Author: unknown <lmunn64@gmail.com>
+Date:   Wed Mar 20 00:44:31 2024 -0500
+
+    Trainer menu and relative coordinates complete, movement finished, NPC collision fixed. Ready for battles, entering PC and PM and color.
+
+
+
+commit 4511157779569fdc7928b46f188891f2f9c07073
+Author: unknown <lmunn64@iastate.edu>
+Date:   Mon Mar 18 16:51:32 2024 -0500
+
+    implemented curses to print map, movement in progress. Check for collisions for PC.
+
+
 commit fffd038124fb96107d6876aa8b95fe4ab2792dd2
 Author: unknown <lmunn64@gmail.com>
 Date:   Thu Feb 29 01:56:28 2024 -0600
@@ -10,12 +44,6 @@ Date:   Wed Feb 28 21:23:17 2024 -0600
 
     working collison for moving NPCS, working heap, and screen
 
-commit 4608a7aa7192ab5196733a9ff1f57c26adb7adcf
-Merge: 53e1e00 841a353
-Author: unknown <lmunn64@iastate.edu>
-Date:   Wed Feb 28 15:29:00 2024 -0600
-
-    merge
 
 commit 53e1e00e56656bf2d144f161d13247f762ceb53f
 Author: unknown <lmunn64@iastate.edu>
@@ -119,24 +147,6 @@ Author: unknown <lmunn64@gmail.com>
 Date:   Tue Jan 30 21:55:40 2024 -0600
 
     Created working generator without pokemarts and centers
-
-commit 33add5afc4dc64af76e3215214585373dfe3b5cd
-Author: Luke Munn <145295385+lmunn64@users.noreply.github.com>
-Date:   Tue Jan 30 19:54:15 2024 -0600
-
-    Update README.md
-
-commit 9ab1335ea6bb4170f99d46af39ff049cfa6b9b95
-Author: Luke Munn <145295385+lmunn64@users.noreply.github.com>
-Date:   Tue Jan 30 19:53:20 2024 -0600
-
-    Create README.md
-
-commit 8b9232dc63987eb2f9777cebc6365d90aac00a8a
-Author: unknown <lmunn64@iastate.edu>
-Date:   Tue Jan 30 19:34:47 2024 -0600
-
-    commit for desktop
 
 commit cd8210e513840d98e1e64df6204c1fe2ddf9e32c
 Author: unknown <lmunn64@iastate.edu>

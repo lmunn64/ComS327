@@ -77,6 +77,8 @@ typedef class Map {
      int exitS;
      int exitW;
      int exitE;
+     int nextY; //next maps to be taken to
+     int nextX;
 } map;
 
 typedef class distMap {
@@ -134,7 +136,7 @@ int currExitW;
 int currExitE;
 
 //2d array of pointers to map classes
-map *world[401][401];
+map *world[402][402];
 distMap *paths[2];
 
 //location of player character
@@ -586,7 +588,10 @@ void displayWarning(const char* message){
 //prints map to IO
 void printMap(){
     int check;
+    int x = currWorldRow - 200;
+    int y = currWorldCol - 200;
     mvprintw(0, (MAP_X - strlen(topper)) / 2, "%s", topper);
+    mvprintw(22, (MAP_X - 40) / 2, "%s %d %s %d %s", "-----You are at Coordinates", y, "x", x, "-----");
     for(int i = 1; i < MAP_Y+1; i++){
         for(int j = 0; j < MAP_X; j++){
             check = 1;
@@ -629,10 +634,7 @@ void printMap(){
                     }
                 }
             }
-        // mvprintw(j, i, "%c" '/n')
     }
-
-    // printw("%s %dx%d\n\n\n", "You are at coordinate: ", currWorldCol-200, currWorldRow-200);
 }
 
 void print_in_middle(WINDOW *win, int starty, int startx, int width, const char *string, chtype color)
@@ -729,8 +731,10 @@ void displayBattle(){
     wrefresh(win);
     delwin(win);
     printMap();
+    refresh();
 }
-void displayFlyMenu(){
+
+int displayFlyMenu(){
     WINDOW *win;
     refresh();
     int winWidth = 32;
@@ -743,7 +747,6 @@ void displayFlyMenu(){
     int y;
     std::stringstream ssX;
     std::stringstream ssY;
-    keypad(win, TRUE);
 
     echo();
 
@@ -768,22 +771,29 @@ void displayFlyMenu(){
 
     ssY << strY;
     ssY >> y;
+
     
     wclear(win);
     wrefresh(win);
     printMap();
 
     delwin(win);
-
     noecho();
-
-    if(y > 400 || x > 400 || x < 0 || y < 0 ){
-        displayWarning("-Inputs must be betweeen 0 and 400-");
+    
+    if(y > 200 || x > 200 || x < -200 || y < -200 ){
+        displayWarning("-Inputs must be betweeen -200 and 200-");
+        return 0;
     }
-    else if(y == currWorldRow && x == currWorldCol)
+    else if(abs(y+200) == currWorldRow && abs(x+200) == currWorldCol){
         displayWarning("----You are on this map already----");
-    else
-        initMap(y, x, 0);
+        return 0;
+    }
+    else{
+        world[currWorldRow][currWorldCol]->nextY = abs(y+200);
+        world[currWorldRow][currWorldCol]->nextX = abs(x+200);
+        return 5;
+    }
+        
 }
 
 void displayTrainerMenu(){
@@ -1044,10 +1054,13 @@ void moveFollowers(character_t *t, int character){
         t->y = minY+1;
         t->x = minX-1;
         t->dir = 7;
-        t->next_turn = t->next_turn;
+        
         min = paths[character]->screen[minY+1][minX-1];
         t->next_turn = t->next_turn + pathFindCost(world[currWorldRow][currWorldCol]->screen[minY+1][minX-1], character);
     }
+    else
+        t->next_turn = t->next_turn + 10;
+
 }
 
 int getWandererDirection(character_t *t){
@@ -1267,9 +1280,10 @@ int movePC(character_t *t, char ch){ //if this returns a 0, then no gate travers
     else if(ch == 't'){
         displayTrainerMenu();
         t->next_turn = t->next_turn;
+        
     }
     else if(ch == 'f'){
-        displayFlyMenu();
+        return displayFlyMenu();
         t->next_turn = t->next_turn;
     }
     else if(ch == '5' | ch == 0x20 || ch == '.'){
@@ -1490,8 +1504,7 @@ void moveNPCs(character_t *t){
 
 //initialize npcs on single map
 void traffic(){
-
-    character_t *c = (character_t *)malloc(sizeof(character_t));
+    character_t *c;
     char ch;
     int gate = 0; //1 north, 2 south, 3 east, 4 west
 
@@ -1502,23 +1515,27 @@ void traffic(){
         }  
         world[currWorldRow][currWorldCol]->heapInit = 1;
     }
+    printMap();
+    refresh();
+    while (gate == 0) {
+        c = (character_t *)heap_remove_min(&world[currWorldRow][currWorldCol]->mapHeap);
 
-    while ((c = (character_t *)heap_remove_min(&world[currWorldRow][currWorldCol]->mapHeap)) && gate == 0) {
         if(c->symbol == '@'){
             if((ch = getch()) != 'q'){
-                gate = movePC(c, ch);
+                gate = movePC(c, ch); 
+                heap_insert(&world[currWorldRow][currWorldCol]->mapHeap, &world[currWorldRow][currWorldCol]->NPC[c->sequence_num]);
+                printMap();
+                refresh();
             }
             else
                 break;
         }
-        else if(ch != 'q')
+        else if(ch != 'q'){
             moveNPCs(c); 
-        if(c->sequence_num == 0){
-            printMap();
-            refresh();
-        } 
-        heap_insert(&world[currWorldRow][currWorldCol]->mapHeap, &world[currWorldRow][currWorldCol]->NPC[c->sequence_num]);
+            heap_insert(&world[currWorldRow][currWorldCol]->mapHeap, &world[currWorldRow][currWorldCol]->NPC[c->sequence_num]);
+        }
       }
+
     if(gate == 1 && ch != 'q'){ //move north
         initMap(currWorldRow, currWorldCol-1, gate);
     }
@@ -1530,6 +1547,10 @@ void traffic(){
     }
     else if(gate == 4 && ch != 'q'){ //move west
         initMap(currWorldRow-1, currWorldCol, gate);
+    }
+    else if(gate == 5 && ch != 'q'){ //move west
+        initMap(world[currWorldRow][currWorldCol]->nextY, 
+        world[currWorldRow][currWorldCol]->nextX, 0);
     }
 }
 
@@ -1666,7 +1687,6 @@ void initMap(int worldRow, int worldCol, int directionFrom){
     printMap();
     traffic();
 }
-
 
 int main(int argc, char *argv[]){
     
